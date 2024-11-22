@@ -2,8 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Admin\Users;
-use App\Livewire\Admin\Roles;
+
 
 
 Route::get('/', function () {
@@ -21,6 +20,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/clients', \App\Livewire\Admin\Clients::class)->name('clients.index')
         ->middleware('permission:view_clients');
     Route::get('/settings', \App\Livewire\Admin\Settings::class)->name('settings.index');
+    Route::get('/products', \App\Livewire\Admin\Products::class)->name('products.index');
+    Route::get('/categories', \App\Livewire\Admin\Categories::class)->name('categories.index');
+
 });
 
 Route::middleware('auth')->group(function () {
