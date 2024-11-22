@@ -28,11 +28,22 @@ class Product extends Model
         'is_serialized' => 'boolean',
     ];
 
-   
+
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function batches()
+    {
+        return $this->hasMany(ProductBatch::class);
+    }
+
+    public function serialNumbers()
+    {
+        return $this->hasMany(ProductSerialNumber::class);
+    }
+
 
     // public function warehouseStocks()
     // {

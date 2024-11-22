@@ -1,23 +1,11 @@
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Управление товарами</h1>
-    {{-- @if (auth()->user()->hasPermission('create_products')) --}}
-    <button wire:click="createProduct" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
-        <i class="fas fa-plus"></i> Добавить товар
-    </button>
-    {{-- @endif --}}
-
-    {{-- <div class="relative">
-        <button id="settingsButton" class="bg-gray-500 text-white px-4 py-2 rounded mb-4">
-            <i class="fas fa-cog"></i>
+    @if (auth()->user()->hasPermission('view_users'))
+        <button wire:click="createProduct" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
+            <i class="fas fa-plus"></i> Добавить товар
         </button>
+    @endif
 
-        <div id="columnsMenu" class="hidden bg-white shadow-md rounded p-4 absolute z-10">
-            <h2 class="font-bold mb-2">Выберите колонки для отображения:</h2>
-            <label><input type="checkbox" class="column-toggle" data-column="Название" checked> Название</label><br>
-            <label><input type="checkbox" class="column-toggle" data-column="Артикул" checked> Артикул</label><br>
-            <label><input type="checkbox" class="column-toggle" data-column="Количество" checked> Количество</label><br>
-        </div>
-    </div> --}}
 
     <table class="min-w-full bg-white shadow-md rounded mt-4" id="table">
         <thead>
@@ -33,7 +21,7 @@
                 <tr>
                     <td class="py-2 px-4 border-b">{{ $product->name }}</td>
                     <td class="py-2 px-4 border-b">{{ $product->sku }}</td>
-                    <td class="py-2 px-4 border-b">{{ $product->stock_quantity }}</td>
+                    {{-- <td class="py-2 px-4 border-b">{{ $product->stock_quantity }}</td> --}}
                     <td class="py-2 px-4 border-b space-x-2">
                         <button wire:click="editProduct({{ $product->id }})" class="text-yellow-500">
                             <i class="fas fa-edit"></i>
@@ -84,14 +72,14 @@
                     @enderror
                 </div>
 
-                <div>
+                {{-- <div>
                     <label class="block mb-1">Количество</label>
                     <input type="number" wire:model="stock_quantity" placeholder="Количество"
                         class="w-full p-2 border rounded">
                     @error('stock_quantity')
                         <span class="text-red-500">{{ $message }}</span>
                     @enderror
-                </div>
+                </div> --}}
                 <div>
                     <label>Текущие изображения:</label>
                     <div class="flex flex-wrap gap-2">
@@ -164,7 +152,7 @@
                                 <h2 class="text-xl font-bold mb-4">Вы уверены, что хотите удалить?</h2>
                                 <p>Это действие нельзя отменить.</p>
                                 <div class="mt-4 flex justify-end space-x-2">
-                                    <!-- Кнопка "Да" вызывает метод Livewire напрямую -->
+
                                     <button wire:click="deleteProduct({{ $product->id }})" id="confirmDeleteButton"
                                         class="bg-red-500 text-white px-4 py-2 rounded">Да</button>
                                     <button onclick="cancelDelete()"

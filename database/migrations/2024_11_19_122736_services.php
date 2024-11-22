@@ -17,9 +17,9 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('sku')->unique()->nullable();
             $table->string('articul')->nullable();
-            $table->json('images')->nullable();
+            // $table->json('images')->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->integer('stock_quantity')->default(0);
+            // $table->integer('stock_quantity')->default(0);
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

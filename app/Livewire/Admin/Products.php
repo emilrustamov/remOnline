@@ -46,7 +46,6 @@ class Products extends Component
             'category_id' => 'required|exists:categories,id',
             'sku' => 'required|string|unique:products,sku,' . ($this->productId ?? 'NULL'),
             'articul' => 'nullable|string|max:255',
-            'stock_quantity' => 'required|integer|min:0',
             'status' => 'boolean',
             'newImages.*' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -58,7 +57,7 @@ class Products extends Component
                 $photoPaths[] = $image->store('products', 'public'); // Сохраняем новые изображения
             }
         }
-        
+
 
         // Сохранение продукта
         Product::updateOrCreate(
@@ -79,30 +78,6 @@ class Products extends Component
         session()->flash('success', $this->productId ? 'Товар успешно обновлен.' : 'Товар успешно добавлен.');
         $this->resetForm();
     }
-
-
-    public function generateBarcode()
-    {
-        $ean = substr(str_pad(rand(1, 999999999999), 12, '0', STR_PAD_LEFT), 0, 12);
-        $checksum = $this->calculateEAN13Checksum($ean);
-        return $ean . $checksum;
-    }
-    public function generateBarcodeManually()
-    {
-        $this->barcode = $this->generateBarcode();
-        session()->flash('success', 'Штрих-код успешно сгенерирован.');
-    }
-
-
-    private function calculateEAN13Checksum($ean)
-    {
-        $sum = 0;
-        for ($i = 0; $i < 12; $i++) {
-            $sum += ($i % 2 === 0 ? 1 : 3) * $ean[$i];
-        }
-        return (10 - ($sum % 10)) % 10;
-    }
-
 
     public function editProduct($id)
     {
@@ -151,6 +126,28 @@ class Products extends Component
     {
         unset($this->images[$index]);
         $this->images = array_values($this->images); // Переиндексация массива
+    }
+
+    public function generateBarcode()
+    {
+        $ean = substr(str_pad(rand(1, 999999999999), 12, '0', STR_PAD_LEFT), 0, 12);
+        $checksum = $this->calculateEAN13Checksum($ean);
+        return $ean . $checksum;
+    }
+    public function generateBarcodeManually()
+    {
+        $this->barcode = $this->generateBarcode();
+        session()->flash('success', 'Штрих-код успешно сгенерирован.');
+    }
+
+
+    private function calculateEAN13Checksum($ean)
+    {
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $sum += ($i % 2 === 0 ? 1 : 3) * $ean[$i];
+        }
+        return (10 - ($sum % 10)) % 10;
     }
 
 
