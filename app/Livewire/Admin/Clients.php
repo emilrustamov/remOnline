@@ -56,8 +56,6 @@ class Clients extends Component
 
         if (!Auth::user()->hasPermission('create_clients')) {
             $this->dispatch('error');
-            session()->flash('message', 'У вас нет прав для создания клиентов.');
-            session()->flash('type', 'error');
             return;
         }
 
@@ -100,8 +98,6 @@ class Clients extends Component
         $this->resetForm();
         $this->clients = Client::with(['phones', 'emails'])->get();
         $this->dispatch('created');
-        session()->flash('message', 'Клиент успешно сохранен.');
-        session()->flash('type', 'success');
         $this->dispatch('refreshPage');
     }
 

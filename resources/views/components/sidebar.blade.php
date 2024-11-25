@@ -29,8 +29,15 @@
                     <i class="fas fa-user-shield mr-2"></i> Роли
                 </a>
             </li>
-
-           @if (auth()->user()->hasPermission('view_clients'))
+            <li class="mb-2">
+                <a href="{{ route('admin.products.index') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                    <i class="fa-solid fa-gifts mr-2"></i> Товары
+                </a>
+                <a href="{{ route('admin.categories.index') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                    <i class="fa fa-list-alt mr-2"></i> Категории
+                </a>
+            </li>
+            @if (auth()->user()->hasPermission('view_clients'))
                 <li class="mb-2">
                     <a href="{{ route('admin.clients.index') }}"
                         class="flex items-center p-2 hover:bg-gray-700 rounded">
