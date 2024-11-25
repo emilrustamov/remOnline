@@ -19,6 +19,10 @@ class Users extends Component
     public $hire_date; // Новое поле для даты приёма
     public $position;  // Новое поле для должности
 
+    protected $listeners = ['editUser'];
+
+
+
     public function mount()
     {
         $this->users = User::with('roles')->get();
@@ -82,6 +86,7 @@ class Users extends Component
         User::findOrFail($userId)->delete();
         $this->users = User::with('roles')->get(); // Обновляем список
         session()->flash('success', 'Пользователь успешно удален.');
+        $this->dispatch('refreshPage');
     }
 
     public function toggleUserStatus($userId)

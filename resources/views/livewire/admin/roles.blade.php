@@ -4,7 +4,7 @@
         <i class="fas fa-plus"></i> Добавить роль
     </button>
 
-    <table class="min-w-full bg-white shadow-md rounded mt-4">
+    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4">
         <thead>
             <tr>
                 <th class="py-2 px-4 border-b">Название роли</th>
@@ -28,8 +28,8 @@
                 </tr>
             @endforeach
         </tbody>
-    </table>
-
+    </table> --}}
+    @livewire('roles-table')
     <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
         style="display: {{ $showForm ? 'block' : 'none' }};">
         <div id="form"
@@ -54,6 +54,13 @@
                         {{ $permission->name }}
                     </label>
                 @endforeach
+
+                @if ($roleId)
+                    <span wire:click="deleteRole({{ $roleId }})" class="text-red-500 cursor-pointer">
+                        Удалить
+                    </span>
+                @endif
+
 
                 <!-- Кнопки управления -->
                 <div class="mt-4 flex justify-start space-x-2">

@@ -25,6 +25,7 @@ class Clients extends Component
     public $phones = [['number' => '', 'sms' => false]];
     public $emails = [];
     public $showForm = false;
+    protected $listeners = ['editClient'];
 
     public function mount()
     {

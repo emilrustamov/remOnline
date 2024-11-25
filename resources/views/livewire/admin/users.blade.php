@@ -22,7 +22,8 @@
         </div>
     </div>
 
-    <table class="table min-w-full bg-white shadow-md rounded mt-4" id="userTable">
+
+    {{-- <table class="table min-w-full bg-white shadow-md rounded mt-4" id="userTable">
         <thead>
             <tr>
                 <th class="py-2 px-4 border-b">Имя</th>
@@ -72,8 +73,8 @@
                 </tr>
             @endforeach
         </tbody>
-    </table>
-
+    </table> --}}
+    @livewire('users-table')
     @if ($showForm)
         <div
             class="fixed top-0 right-0 w-1/3 h-full bg-gray-100 shadow-lg p-6 transform transition-transform duration-500 ease-in-out {{ $showForm ? 'translate-x-0' : 'translate-x-full' }}">
@@ -114,7 +115,13 @@
             @error('roleId')
                 <span class="text-red-500">{{ $message }}</span>
             @enderror
-
+            {{-- @if (auth()->user()->hasPermission('delete_users')) --}}
+            @if ($userId)
+                <p onclick="confirmDeletion({{ $userId }})" wire:click="deleteUser({{ $userId }})" class="text-red-500 py-1">
+                    Удалить
+                </p>
+            @endif
+            {{-- @endif --}}
             <button wire:click="saveUser" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 mt-4 rounded">
                 <i class="fas fa-save"></i> <!-- Иконка сохранения -->
             </button>
@@ -123,6 +130,12 @@
             </button>
         </div>
     @endif
-
+    <script>
+        function confirmDeletion(userId) {
+            if (confirm('Вы действительно хотите удалить пользователя?')) {
+                @this.call('deleteUser', userId);
+            }
+        }
+    </script>
 
 </div>

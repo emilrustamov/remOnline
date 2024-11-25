@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cancelButton.addEventListener('click', () => {
-        confirmationModal.style.display = 'none';
         isFormChanged = false; // Сбрасываем флаг изменений при отмене закрытия
+        confirmationModal.style.display = 'none';
     });
 
     modalBackground.addEventListener('click', (event) => {

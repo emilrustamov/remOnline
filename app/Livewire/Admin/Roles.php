@@ -15,6 +15,8 @@ class Roles extends Component
     public $selectedPermissions = [];
     public $showForm = false;
 
+    protected $listeners = ['editRole'];
+
     public function mount()
     {
         $this->roles = Role::with('permissions')->get();
@@ -58,17 +60,36 @@ class Roles extends Component
         $this->dispatch('refreshPage');
     }
 
+    // public function deleteRole($id)
+    // {
+    //     $role = Role::findOrFail($id);
+    //     $role->permissions()->detach(); // Удаляем все пермишены, связанные с ролью
+    //     $role->delete();
+
+    //     $this->roles = Role::with('permissions')->get(); // Обновляем список ролей
+    //     session()->flash('message', 'Роль успешно удалена.');
+    //     session()->flash('type', 'success');
+    //     $this->dispatch('refreshPage');
+    // }
     public function deleteRole($id)
     {
         $role = Role::findOrFail($id);
-        $role->permissions()->detach(); // Удаляем все пермишены, связанные с ролью
+        $role->permissions()->detach(); // Удаляем связанные пермишены
         $role->delete();
 
-        $this->roles = Role::with('permissions')->get(); // Обновляем список ролей
+        // Обновляем список ролей
+        $this->roles = Role::with('permissions')->get();
+
+        // Сбрасываем форму, если удаляем текущую редактируемую роль
+        if ($this->roleId == $id) {
+            $this->resetForm();
+        }
+
         session()->flash('message', 'Роль успешно удалена.');
         session()->flash('type', 'success');
         $this->dispatch('refreshPage');
     }
+
 
     public function resetForm()
     {

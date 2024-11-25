@@ -45,8 +45,9 @@
             Покупатели
         </button>
     </div>
+    @livewire('clients-table')
 
-    <table class="min-w-full bg-white shadow-md rounded mt-4" id="table" >
+    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4" id="table" >
         <thead>
             <tr>
                 <th class="py-2 px-4 border-b">ФИО/Название компании</th>
@@ -133,7 +134,7 @@
                 </tr>
             @endforeach
         </tbody>
-    </table>
+    </table> --}}
 
     <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 "
         style="display: {{ $showForm ? 'block' : 'none' }};">

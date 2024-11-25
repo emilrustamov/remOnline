@@ -8,6 +8,13 @@ use App\Models\User;
 
 class UsersTable extends DataTableComponent
 {
+
+    public $some = 'abc';
+
+    public function changesome($id)
+    {
+        $this->some = 'das' . $id;
+    }
     protected $model = User::class;
 
     public function configure(): void
@@ -18,8 +25,11 @@ class UsersTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Name", "name")
+            Column::make("ID", "id")
                 ->sortable(),
+                Column::make("Name", "name")->format(
+                    fn($value, $row, Column $column) => '<a href="#" wire:click="$dispatch(\'editUser\', { userId: ' . $row->id . ' })">' . $row->name . '</a>'
+                )->html()->sortable(),                
             Column::make("Email", "email")
                 ->sortable(),
             Column::make("Is active", "is_active")
@@ -34,4 +44,6 @@ class UsersTable extends DataTableComponent
                 ->sortable(),
         ];
     }
+
+
 }
