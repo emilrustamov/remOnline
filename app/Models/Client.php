@@ -19,6 +19,7 @@ class Client extends Model
         'address',
         'note',
         'status',
+        'sort',
     ];
 
     // Связь с контактами клиента

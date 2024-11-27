@@ -3,33 +3,73 @@
     <button wire:click="createRole" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
         <i class="fas fa-plus"></i> Добавить роль
     </button>
+    <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
+        Настроить колонки
+    </button>
 
-    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Название роли</th>
+    <!-- Меню фильтров -->
+    <div id="columnsMenu" class="hidden absolute bg-white shadow-md rounded p-4 z-10 mt-2">
+        <h2 class="font-bold mb-2">Выберите колонки для отображения:</h2>
+        @foreach ($columns as $column)
+            <div class="mb-2">
+                <label>
+                    <input type="checkbox" class="column-toggle" data-column="{{ $column }}" checked>
+                    {{ str_replace('_', ' ', $column) }}
+                </label>
+            </div>
+        @endforeach
+    </div>
 
-                <th class="py-2 px-4 border-b">Действия</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div id="table-container" wire:ignore>
+        <!-- Скелетон -->
+        <div id="table-skeleton" class="animate-pulse">
+            <!-- Шапка таблицы -->
+            <div id="skeleton-header-row" class="grid grid-cols-{{ count($columns) }}">
+                @foreach ($columns as $column)
+                    <div class="p-2 h-6 bg-gray-300 rounded"></div>
+                @endforeach
+            </div>
+
+            <!-- Тело таблицы -->
             @foreach ($roles as $role)
-                <tr>
-                    <td class="py-2 px-4 border-b">{{ $role->name }}</td>
-
-                    <td class="py-2 px-4 border-b space-x-2">
-                        <button wire:click="editRole({{ $role->id }})" class="text-yellow-500">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button wire:click="deleteRole({{ $role->id }})" class="text-red-500">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
+                <!-- Генерируем 5 строк скелетона -->
+                <div class="grid grid-cols-{{ count($columns) }} gap-4">
+                    @foreach ($columns as $column)
+                        <div class="p-2 h-6 bg-gray-200 rounded"></div>
+                    @endforeach
+                </div>
             @endforeach
-        </tbody>
-    </table> --}}
-    @livewire('roles-table')
+        </div>
+        <div id="table" class="fade-in w-full border border-gray-300 rounded-md overflow-hidden">
+            <!-- Шапка таблицы -->
+            <div id="header-row" class="grid grid-cols-{{ count($columns) }}">
+                @foreach ($columns as $column)
+                    <div class="p-2 uppercase cursor-move" data-key="{{ $column }}">
+                        {{ str_replace('_', ' ', $column) }}
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Тело таблицы -->
+            <div id="table-body">
+                @foreach ($roles as $role)
+                    <div class="grid grid-cols-{{ count($columns) }}" data-role-id="{{ $role->id }}"
+                        wire:click="editRole({{ $role->id }})">
+                        @foreach ($columns as $column)
+                            <div class="p-2" data-key="{{ $column }}">
+                                @if ($column === 'permissions')
+                                    {{ $role->permissions->pluck('name')->join(', ') }}
+                                @else
+                                    {{ $role->$column }}
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
     <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
         style="display: {{ $showForm ? 'block' : 'none' }};">
         <div id="form"
@@ -93,7 +133,22 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const skeleton = document.getElementById("table-skeleton");
+        const table = document.getElementById("table");
 
+        function showTable() {
+            skeleton.classList.add("hidden"); // Скрываем скелетон
+            table.classList.add("show"); // Добавляем класс для плавного появления
+        }
+
+        // Симуляция загрузки данных
+        setTimeout(() => {
+            showTable();
+        }, 1500); // Время можно изменить в зависимости от загрузки
+    });
+</script>
 
 <script>
     //перезагрузка страницы
@@ -118,8 +173,9 @@
     }
 </script>
 @push('scripts')
-    @vite('resources/js/dragdroptable.js');
     @vite('resources/js/modal.js');
+    @vite('resources/js/dragdroptable.js');
+    @vite('resources/js/sortcols.js');
     @vite('resources/js/cogs.js');
 @endpush
 <script>

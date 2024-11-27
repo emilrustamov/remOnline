@@ -20,7 +20,17 @@ class Users extends Component
     public $position;  // Новое поле для должности
 
     protected $listeners = ['editUser'];
-
+    public $columns = [
+        'id',
+        'name',
+        'email',
+        'hire_date',
+        'position',
+        'role',
+        'is_active',
+        'created_at',
+        'updated_at',
+    ];
 
 
     public function mount()

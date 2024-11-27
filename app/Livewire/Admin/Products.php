@@ -15,6 +15,12 @@ class Products extends Component
     public $name, $description, $sku, $articul, $stock_quantity, $status = true, $productId, $images = [], $newImages = [], $barcode, $showForm = false, $category_id;
 
 
+    public $columns = [
+        'name',          // Название
+        'sku',           // Артикул
+        'stock_quantity' // Количество
+    ];
+
     public function resetForm()
     {
         $this->productId = null;

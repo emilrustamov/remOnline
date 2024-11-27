@@ -9,7 +9,10 @@ class Categories extends Component
 {
     public $name, $parent_id, $categoryId;
     public $showForm = false;
-
+    public $columns = [
+        'name',             // Название
+        'parent'   // Родительская категория
+    ];
 
     public function resetForm()
     {

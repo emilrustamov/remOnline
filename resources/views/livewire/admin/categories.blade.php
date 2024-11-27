@@ -7,7 +7,7 @@
     </button>
     {{-- @endif --}}
 
-    <table class="min-w-full bg-white shadow-md rounded mt-4" id="table">
+    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4" id="table">
         <thead>
             <tr>
                 <th class="py-2 px-4 border-b">Название</th>
@@ -34,7 +34,69 @@
                 </tr>
             @endforeach
         </tbody>
-    </table>
+    </table> --}}
+    <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
+        Настроить колонки
+    </button>
+
+    <!-- Меню фильтров -->
+    <div id="columnsMenu" class="hidden absolute bg-white shadow-md rounded p-4 z-10 mt-2">
+        <h2 class="font-bold mb-2">Выберите колонки для отображения:</h2>
+        @foreach ($columns as $column)
+            <div class="mb-2">
+                <label>
+                    <input type="checkbox" class="column-toggle" data-column="{{ $column }}" checked>
+                    {{ str_replace('_', ' ', $column) }}
+                </label>
+            </div>
+        @endforeach
+    </div>
+    <div id="table-container" wire:ignore>
+        <!-- Скелетон -->
+        <div id="table-skeleton" class="animate-pulse">
+            <!-- Шапка таблицы -->
+            <div id="skeleton-header-row" class="grid grid-cols-{{ count($columns) }}">
+                @foreach ($columns as $column)
+                    <div class="p-2 h-6 bg-gray-300 rounded"></div>
+                @endforeach
+            </div>
+
+            <!-- Тело таблицы -->
+            @for ($i = 0; $i < 5; $i++) <!-- Генерируем 5 строк скелетона -->
+                <div class="grid grid-cols-{{ count($columns) }} gap-4">
+                    @foreach ($columns as $column)
+                        <div class="p-2 h-6 bg-gray-200 rounded"></div>
+                    @endforeach
+                </div>
+            @endfor
+        </div>
+        <div id="table" class="fade-in shadow w-full rounded-md overflow-hidden">
+            <div id="header-row" class="grid grid-flow-col auto-cols-auto">
+                @foreach ($columns as $column)
+                    <div class="p-2 cursor-move whitespace-nowrap" data-key="{{ $column }}">
+                        {{ str_replace('_', ' ', $column) }}
+                    </div>
+                @endforeach
+            </div>
+
+            <div id="table-body">
+                @foreach ($categories as $category)
+                    <div class="grid grid-flow-col auto-cols-auto" wire:click="editCategory({{ $category->id }})">
+                        @foreach ($columns as $column)
+                            <div class="p-2 whitespace-nowrap" data-key="{{ $column }}">
+                                @if ($column == 'parent')
+                                    {{ $category->parent ? $category->parent->name : 'Нет' }}
+                                @else
+                                    {{ $category->$column }}
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 
     <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
         style="display: {{ $showForm ? 'block' : 'none' }};">
@@ -127,7 +189,8 @@
 </script>
 
 @push('scripts')
-    @vite('resources/js/dragdroptable.js');
     @vite('resources/js/modal.js');
+    @vite('resources/js/dragdroptable.js');
+    @vite('resources/js/sortcols.js');
     @vite('resources/js/cogs.js');
 @endpush

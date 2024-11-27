@@ -26,10 +26,22 @@ class Clients extends Component
     public $emails = [];
     public $showForm = false;
     protected $listeners = ['editClient'];
-
+    public $columns = [
+        'id',
+        'first_name',
+        'last_name',
+        'client_type',
+        'contact_person',
+        'address',
+        'note',
+        'is_supplier',
+        'is_conflict',
+        'status',
+    ];
     public function mount()
     {
         $this->clients = Client::with(['phones', 'emails'])->get();
+
         $this->loadClients();
     }
 
@@ -205,10 +217,15 @@ class Clients extends Component
         }
 
         $this->clients = $query->with(['phones', 'emails'])->get();
+
+        // Отладка
+        logger('Клиенты загружены:', $this->clients->toArray());
     }
+
 
     public function filterClients($type)
     {
+        // Устанавливаем фильтры
         if (in_array($type, ['individual', 'company', 'all'])) {
             $this->clientTypeFilter = $type;
         }
@@ -217,8 +234,52 @@ class Clients extends Component
             $this->supplierFilter = $type;
         }
 
+        // Загружаем клиентов
         $this->loadClients();
+
+        // Обновляем видимость колонок
+        $this->updateColumns();
     }
+
+    public function updateColumns()
+    {
+        // Пример: скрывать/показывать колонки в зависимости от фильтров
+        if ($this->clientTypeFilter === 'individual') {
+            $this->columns = [
+                'id',
+                'first_name',
+                'last_name',
+                'contact_person',
+                'address',
+                'note',
+            ];
+        } elseif ($this->clientTypeFilter === 'company') {
+            $this->columns = [
+                'id',
+                'first_name',
+                'contact_person',
+                'address',
+                'is_supplier',
+                'note',
+            ];
+        } else {
+            $this->columns = [
+                'id',
+                'first_name',
+                'last_name',
+                'client_type',
+                'contact_person',
+                'address',
+                'note',
+                'is_supplier',
+                'is_conflict',
+                'status',
+            ];
+        }
+    }
+
+
+
 
     public function render()
     {

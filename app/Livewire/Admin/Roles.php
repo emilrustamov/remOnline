@@ -17,6 +17,11 @@ class Roles extends Component
 
     protected $listeners = ['editRole'];
 
+    public $columns = [
+        'id',
+        'name',
+    ];
+
     public function mount()
     {
         $this->roles = Role::with('permissions')->get();

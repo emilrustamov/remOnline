@@ -127,7 +127,6 @@
 </script>
 
 @push('scripts')
-    @vite('resources/js/dragdroptable.js');
     @vite('resources/js/modal.js');
     @vite('resources/js/cogs.js');
 @endpush

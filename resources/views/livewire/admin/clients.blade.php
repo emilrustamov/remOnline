@@ -6,135 +6,100 @@
             <i class="fas fa-user-plus"></i> <!-- Иконка добавления клиента -->
         </button>
     @endif
-    <div class="relative">
-        <button id="settingsButton" class="bg-gray-500 text-white px-4 py-2 rounded mb-4">
-            <i class="fas fa-cog"></i>
-        </button>
+    <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
+        Настроить колонки
+    </button>
 
-        <div id="columnsMenu" class="hidden bg-white shadow-md rounded p-4 absolute z-10">
-
-            <h2 class="font-bold mb-2">Выберите колонки для отображения:</h2>
-            <label><input type="checkbox" class="column-toggle" data-column="Имя" checked> Имя</label><br>
-            <label><input type="checkbox" class="column-toggle" data-column="Контактное лицо" checked> Контактное
-                лицо</label><br>
-            <label><input type="checkbox" class="column-toggle" data-column="Тип" checked> Тип</label><br>
-            <label><input type="checkbox" class="column-toggle" data-column="Действия" checked> Действия</label><br>
-        </div>
+    <!-- Меню фильтров -->
+    <div id="columnsMenu" class="hidden absolute bg-white shadow-md rounded p-4 z-10 mt-2">
+        <h2 class="font-bold mb-2">Выберите колонки для отображения:</h2>
+        @foreach ($columns as $column)
+            <div class="mb-2">
+                <label>
+                    <input type="checkbox" class="column-toggle" data-column="{{ $column }}" checked>
+                    {{ str_replace('_', ' ', $column) }}
+                </label>
+            </div>
+        @endforeach
     </div>
 
     <!-- Фильтры -->
     <div class="flex space-x-2 mb-4">
-        <button wire:click="filterClients('all')"
-            class="px-4 py-2 rounded {{ $clientTypeFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200' }}">
+        <button class="filter-button client-type px-4 py-2 rounded bg-blue-500 text-white" data-filter="all">
             Все
         </button>
-        <button wire:click="filterClients('individual')"
-            class="px-4 py-2 rounded {{ $clientTypeFilter === 'individual' ? 'bg-blue-500 text-white' : 'bg-gray-200' }}">
+        <button class="filter-button client-type px-4 py-2 rounded bg-gray-200" data-filter="individual">
             Физ. лица
         </button>
-        <button wire:click="filterClients('company')"
-            class="px-4 py-2 rounded {{ $clientTypeFilter === 'company' ? 'bg-blue-500 text-white' : 'bg-gray-200' }}">
+        <button class="filter-button client-type px-4 py-2 rounded bg-gray-200" data-filter="company">
             Компании
         </button>
-        <button wire:click="filterClients('suppliers')"
-            class="px-4 py-2 rounded {{ $supplierFilter === 'suppliers' ? 'bg-blue-500 text-white' : 'bg-gray-200' }}">
+        <button class="filter-button supplier-type px-4 py-2 rounded bg-gray-200" data-filter="supplier">
             Поставщики
         </button>
-        <button wire:click="filterClients('clients')"
-            class="px-4 py-2 rounded {{ $supplierFilter === 'clients' ? 'bg-blue-500 text-white' : 'bg-gray-200' }}">
+        <button class="filter-button supplier-type px-4 py-2 rounded bg-gray-200" data-filter="client">
             Покупатели
         </button>
     </div>
-    @livewire('clients-table')
-
-    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4" id="table" >
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">ФИО/Название компании</th>
-                <th class="py-2 px-4 border-b">Телефоны</th>
-                <th class="py-2 px-4 border-b">Email</th>
-                <th class="py-2 px-4 border-b">Контактное лицо</th>
-                <th class="py-2 px-4 border-b">Тип</th>
-                <th class="py-2 px-4 border-b">Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($clients as $client)
-                <tr>
-                    <td class="py-2 px-4 border-b">
-                        @if ($client->client_type === 'individual')
-                            <i class="fa fa-user" aria-hidden="true"></i>
-                        @else
-                            <i class="fa-solid fa-briefcase"></i>
-                        @endif
-                        @if ($client->is_conflict)
-                            <i class="fa-solid fa-face-angry"></i>
-                        @endif
-                        @if ($client->is_supplier)
-                            <i class="fas fa-truck"></i>
-                        @endif
-
-                        {{ $client->first_name }} {{ $client->last_name }}
-                    </td>
-
-                    <td class="py-2 px-4 border-b">
-                        @foreach ($client->phones as $phone)
-                            <a href="tel:{{ $phone->phone }}">{{ $phone->phone }}</a>
-                            @if ($phone->is_sms)
-                                <i class="fas fa-sms"></i>
-                            @endif
-                            @if (!$loop->last)
-                                <br>
-                            @endif
-                        @endforeach
-                    </td>
-
-                    <td class="py-2 px-4 border-b">
-                        @foreach ($client->emails as $email)
-                            <a href="mailto:{{ $email->email }}">{{ $email->email }}</a>
-                            <i class="fa fa-envelope" aria-hidden="true"></i>
-                            @if (!$loop->last)
-                                <br>
-                            @endif
-                        @endforeach
-                    </td>
 
 
-                    <td class="py-2 px-4 border-b">
-                        {{ $client->contact_person ? $client->contact_person : 'Нет контактного лица' }}</td>
-                    <td class="py-2 px-4 border-b">{{ $client->client_type }}</td>
-                    <td class="py-2 px-4 border-b  space-x-2">
-                        @if (auth()->user()->hasPermission('edit_clients'))
-                            <button wire:click="editClient({{ $client->id }})" class="text-yellow-500">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        @endif
-                        @if (auth()->user()->hasPermission('delete_clients'))
-                            <button onclick="confirmDelete({{ $client->id }})" class="text-red-500">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                            <!-- Модальное окно подтверждения для удаления -->
-                            <div id="deleteConfirmationModal"
-                                class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
-                                style="display: none;">
-                                <div class="bg-white w-1/3 p-6 rounded-lg shadow-lg">
-                                    <h2 class="text-xl font-bold mb-4">Вы уверены, что хотите удалить?</h2>
-                                    <p>Это действие нельзя отменить.</p>
-                                    <div class="mt-4 flex justify-end space-x-2">
-                                        <!-- Кнопка "Да" вызывает метод Livewire напрямую -->
-                                        <button wire:click="deleteClient({{ $client->id }})" id="confirmDeleteButton"
-                                            class="bg-red-500 text-white px-4 py-2 rounded">Да</button>
-                                        <button onclick="cancelDelete()"
-                                            class="bg-gray-500 text-white px-4 py-2 rounded">Нет</button>
-                                    </div>
-                                </div>
+
+    {{-- @livewire('clients-table') --}}
+
+
+    {{-- кастомная таблица --}}
+
+    <div id="table-container" wire:ignore>
+        <!-- Скелетон -->
+        <div id="table-skeleton" class="animate-pulse">
+            <!-- Шапка таблицы -->
+            <div id="skeleton-header-row" class="grid grid-cols-{{ count($columns) }}">
+                @foreach ($columns as $column)
+                    <div class="p-2 h-6 bg-gray-300 rounded"></div>
+                @endforeach
+            </div>
+
+            <!-- Тело таблицы -->
+            @for ($i = 0; $i < 5; $i++) <!-- Генерируем 5 строк скелетона -->
+                <div class="grid grid-cols-{{ count($columns) }} gap-4">
+                    @foreach ($columns as $column)
+                        <div class="p-2 h-6 bg-gray-200 rounded"></div>
+                    @endforeach
+                </div>
+            @endfor
+        </div>
+
+        <!-- Таблица -->
+        <div id="table" class="fade-in shadow w-full rounded-md overflow-hidden">
+            <!-- Шапка таблицы -->
+            <div id="header-row" class="grid grid-cols-{{ count($columns) }}">
+                @foreach ($columns as $column)
+                    <div class="p-2 uppercase cursor-move" data-key="{{ $column }}">
+                        {{ str_replace('_', ' ', $column) }}
+                    </div>
+                @endforeach
+            </div>
+
+            <div id="table-body">
+                @foreach ($clients as $client)
+                    <div class="grid grid-cols-{{ count($columns) }}" data-client-type="{{ $client->client_type }}"
+                        data-is-supplier="{{ $client->is_supplier ? 'supplier' : 'client' }}">
+                        @foreach ($columns as $column)
+                            <div class="p-2" data-key="{{ $column }}">
+                                {{ $client->$column ?? '-' }}
                             </div>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table> --}}
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+
+
+        </div>
+    </div>
+
+
+
+
 
     <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 "
         style="display: {{ $showForm ? 'block' : 'none' }};">
@@ -272,13 +237,19 @@
             <div class="mt-4 flex justify-end space-x-2">
                 <button id="confirmClose" wire:click="resetForm"
                     class="bg-red-500 text-white px-4 py-2 rounded">Да</button>
-                <button id="cancelClose"
-                    class="bg-gray-500 text-white px-4 py-2 rounded">Нет</button>
+                <button id="cancelClose" class="bg-gray-500 text-white px-4 py-2 rounded">Нет</button>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+@push('scripts')
+    @vite('resources/js/modal.js')
+    @vite('resources/js/dragdroptable.js')
+    @vite('resources/js/sortcols.js')
+    @vite('resources/js/cogs.js')
+@endpush
 
 <script>
     //перезагрузка страницы
@@ -302,13 +273,65 @@
         document.getElementById('deleteConfirmationModal').style.display = 'none';
     }
 </script>
-@push('scripts')
-    @vite('resources/js/dragdroptable.js');
-    @vite('resources/js/modal.js');
-    @vite('resources/js/cogs.js');
-@endpush
 <script>
     function resetForm() {
         @this.resetForm(); // Вызов директивы Livewire
     }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const filterButtons = document.querySelectorAll(".filter-button");
+    const rows = document.querySelectorAll("#table-body > div");
+
+    // Применение фильтров
+    function applyFilters() {
+        const clientTypeFilter = document.querySelector(
+            ".filter-button.client-type.active"
+        )?.dataset.filter || "all";
+        const supplierFilter = document.querySelector(
+            ".filter-button.supplier-type.active"
+        )?.dataset.filter || "all";
+
+        rows.forEach((row) => {
+            const clientType = row.getAttribute("data-client-type");
+            const isSupplier = row.getAttribute("data-is-supplier");
+
+            // Условие видимости строки
+            const matchesClientType =
+                clientTypeFilter === "all" || clientType === clientTypeFilter;
+            const matchesSupplierFilter =
+                supplierFilter === "all" || isSupplier === supplierFilter;
+
+            // Показываем или скрываем строку
+            row.style.display =
+                matchesClientType && matchesSupplierFilter ? "grid" : "none";
+        });
+    }
+
+    // Обработчик клика для кнопок фильтрации
+    filterButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const group = button.classList.contains("client-type")
+                ? ".client-type"
+                : ".supplier-type";
+
+            // Убираем класс active у кнопок из текущей группы
+            document.querySelectorAll(`.filter-button${group}`).forEach((btn) => {
+                btn.classList.remove("bg-blue-500", "text-white", "active");
+                btn.classList.add("bg-gray-200");
+            });
+
+            // Добавляем класс active к текущей кнопке
+            button.classList.add("bg-blue-500", "text-white", "active");
+            button.classList.remove("bg-gray-200");
+
+            // Применяем фильтры
+            applyFilters();
+        });
+    });
+
+    // Применяем фильтры при загрузке страницы
+    applyFilters();
+});
+
 </script>
