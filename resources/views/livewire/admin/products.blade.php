@@ -77,7 +77,7 @@
 
             <div id="table-body">
                 @foreach ($products as $product)
-                    <div class="grid grid-flow-col auto-cols-auto" wire:click="editUser({{ $user->id }})">
+                    <div class="grid grid-flow-col auto-cols-auto" wire:click="editProduct({{ $product->id }})">
                         @foreach ($columns as $column)
                             <div class="p-2 whitespace-nowrap" data-key="{{ $column }}">
                                     {{ $product->$column }}
