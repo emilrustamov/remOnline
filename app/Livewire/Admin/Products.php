@@ -82,6 +82,7 @@ class Products extends Component
         );
 
         session()->flash('success', $this->productId ? 'Товар успешно обновлен.' : 'Товар успешно добавлен.');
+        $this->dispatch('updated');
         $this->resetForm();
     }
 
@@ -124,6 +125,7 @@ class Products extends Component
     public function deleteProduct($id)
     {
         Product::findOrFail($id)->delete();
+        $this->dispatch('deleted');
         $this->showForm = false;
         session()->flash('success', 'Товар успешно удален.');
     }

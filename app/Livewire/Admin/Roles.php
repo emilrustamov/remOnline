@@ -62,6 +62,7 @@ class Roles extends Component
         $this->roles = Role::with('permissions')->get(); // Обновляем список ролей
         session()->flash('message', 'Роль успешно сохранена.');
         session()->flash('type', 'success');
+        $this->dispatch('updated');
         $this->dispatch('refreshPage');
     }
 
@@ -92,6 +93,7 @@ class Roles extends Component
 
         session()->flash('message', 'Роль успешно удалена.');
         session()->flash('type', 'success');
+        $this->dispatch('deleted');
         $this->dispatch('refreshPage');
     }
 

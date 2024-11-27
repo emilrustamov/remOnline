@@ -81,6 +81,7 @@ class Users extends Component
             ]
         );
 
+        $this->dispatch('updated');
         $user->roles()->sync([$this->roleId]); // Синхронизируем с одной ролью
         $this->resetForm();
         $this->users = User::with('roles')->get(); // Обновляем список пользователей
@@ -96,6 +97,8 @@ class Users extends Component
         User::findOrFail($userId)->delete();
         $this->users = User::with('roles')->get(); // Обновляем список
         session()->flash('success', 'Пользователь успешно удален.');
+        $this->dispatch('deleted');
+
         $this->dispatch('refreshPage');
     }
 

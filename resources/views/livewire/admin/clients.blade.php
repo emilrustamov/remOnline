@@ -83,7 +83,7 @@
             <div id="table-body">
                 @foreach ($clients as $client)
                     <div class="grid grid-cols-{{ count($columns) }}" data-client-type="{{ $client->client_type }}"
-                        data-is-supplier="{{ $client->is_supplier ? 'supplier' : 'client' }}">
+                        data-is-supplier="{{ $client->is_supplier ? 'supplier' : 'client' }}" wire:click="editClient({{ $client->id }})">
                         @foreach ($columns as $column)
                             <div class="p-2" data-key="{{ $column }}">
                                 {{ $client->$column ?? '-' }}

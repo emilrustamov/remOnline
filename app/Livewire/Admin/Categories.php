@@ -46,6 +46,7 @@ class Categories extends Component
         );
 
         session()->flash('success', $this->categoryId ? 'Категория обновлена.' : 'Категория добавлена.');
+        $this->dispatch('updated');
 
         $this->resetForm();
     }
@@ -68,6 +69,7 @@ class Categories extends Component
     public function deleteCategory($id)
     {
         Category::findOrFail($id)->delete();
+        $this->dispatch('deleted');
         $this->showForm = false;
         session()->flash('success', 'Категория удалена.');
     }

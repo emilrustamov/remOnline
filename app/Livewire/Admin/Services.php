@@ -68,6 +68,7 @@ class Services extends Component
     public function deleteService($id)
     {
         Service::findOrFail($id)->delete();
+        $this->dispatch('deleted');
         session()->flash('success', 'Услуга удалена.');
     }
 
