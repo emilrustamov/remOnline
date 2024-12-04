@@ -49,7 +49,7 @@
 
     <div class="mb-4">
         <label class="block">Склад</label>
-        <select wire:model="warehouseId" class="w-full border rounded">
+        <select wire:model.live="warehouseId" class="w-full border rounded">
             <option value="">Выберите склад</option>
             @foreach ($warehouses as $warehouse)
                 <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>

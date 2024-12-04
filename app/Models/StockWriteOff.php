@@ -9,12 +9,7 @@ class StockWriteOff extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['supplier_id', 'warehouse_id', 'product_id', 'reason', 'quantity'];
-
-    public function supplier()
-    {
-        return $this->belongsTo(Client::class, 'supplier_id');
-    }
+    protected $fillable = ['warehouse_id', 'product_id', 'reason', 'quantity'];
 
     public function warehouse()
     {
@@ -24,5 +19,11 @@ class StockWriteOff extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function warehouseStock()
+    {
+        return $this->hasOne(WarehouseStock::class, 'warehouse_id', 'warehouse_id')
+            ->whereColumn('product_id', 'product_id');
     }
 }

@@ -35,4 +35,5 @@ class Warehouse extends Model
         $users = array_filter($users, fn($id) => $id != $userId);
         $this->update(['access_users' => $users]);
     }
+    
 }

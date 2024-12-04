@@ -11,25 +11,37 @@ use App\Models\WarehouseStock;
 
 class StockReception extends Component
 {
-    public $selectedProducts = []; // Список выбранных товаров
-    public $supplierId; // Выбранный поставщик
-    public $warehouseId; // Склад
-    public $invoiceNumber; // Номер накладной
-    public $date; // Дата
-    public $comments; // Комментарий
-    public $priceInputModal = false; // Открытие окна для цены и количества
-    public $currentProductId; // Текущий выбранный продукт для цены и количества
-    public $productQuantity = 1; // Количество для текущего продукта
-    public $productPrice; // Цена для текущего продукта
-    public $productModal = false; // Управляет видимостью модального окна
+    public $selectedProducts = [];
+    public $supplierId;
+    public $warehouseId;
+    public $invoiceNumber;
+    public $date;
+    public $comments;
+    public $priceInputModal = false;
+    public $currentProductId;
+    public $productQuantity = 1;
+    public $productPrice;
+    public $productModal = false;
     public $productSearch;
     public $editingProductId = null;
 
-
+    public $products = []; // Доступные товары для выбранного склада
 
     public function mount()
     {
         $this->date = now()->format('Y-m-d');
+    }
+
+    public function updatedWarehouseId()
+    {
+        $this->loadWarehouseProducts();
+    }
+
+    public function loadWarehouseProducts()
+    {
+        $this->products = $this->warehouseId
+            ? WarehouseStock::where('warehouse_id', $this->warehouseId)->with('product')->get()->pluck('product')
+            : [];
     }
 
     public function addProduct($productId)
@@ -44,74 +56,6 @@ class StockReception extends Component
         }
         $this->openPriceInput($productId);
     }
-
-    public function openPriceInput($productId)
-    {
-        $this->currentProductId = $productId;
-        $this->productQuantity = $this->selectedProducts[$productId]['quantity'];
-        $this->productPrice = $this->selectedProducts[$productId]['price'];
-        $this->priceInputModal = true;
-    }
-
-    public function savePriceInput()
-    {
-        $this->validate([
-            'productQuantity' => 'required|integer|min:1',
-            'productPrice' => 'required|numeric|min:0',
-        ]);
-
-        $this->selectedProducts[$this->currentProductId]['quantity'] = $this->productQuantity;
-        $this->selectedProducts[$this->currentProductId]['price'] = $this->productPrice;
-
-        $this->priceInputModal = false;
-        $this->currentProductId = null;
-    }
-
-    public function removeProduct($productId)
-    {
-        unset($this->selectedProducts[$productId]);
-    }
-
-    public function saveReception()
-    {
-        $this->validate([
-            'supplierId' => 'required|exists:clients,id',
-            'warehouseId' => 'required|exists:warehouses,id',
-            'invoiceNumber' => 'nullable|string|max:255',
-            'selectedProducts' => 'required|array|min:1',
-        ]);
-
-        foreach ($this->selectedProducts as $productId => $details) {
-            // Сохранение закупки в таблицу product_purchases
-            ProductPurchase::create([
-                'invoice' => $this->invoiceNumber,
-                'supplier_id' => $this->supplierId,
-                'warehouse_id' => $this->warehouseId,
-                'product_id' => $productId,
-                'note' => $this->comments,
-                'purchase_price' => $details['price'],
-                'quantity' => $details['quantity'],
-            ]);
-
-            // Обновление остатков на складе в таблице warehouse_stocks
-            WarehouseStock::updateOrCreate(
-                [
-                    'warehouse_id' => $this->warehouseId,
-                    'product_id' => $productId,
-                ],
-                [
-                    'quantity' => \DB::raw('quantity + ' . $details['quantity']),
-                ]
-            );
-        }
-
-        session()->flash('success', 'Оприходование успешно сохранено.');
-        $this->reset();
-    }
-
-
-
-
     public function openProductModal($productId)
     {
         $this->currentProductId = $productId;
@@ -124,7 +68,6 @@ class StockReception extends Component
 
         $this->productModal = true;
     }
-
 
     public function closeProductModal()
     {
@@ -152,14 +95,70 @@ class StockReception extends Component
 
 
 
-    public function render()
-{
-    return view('livewire.admin.stock-reception', [
-        'suppliers' => Client::where('is_supplier', true)->get(),
-        'warehouses' => Warehouse::all(),
-        'products' => Product::all(),
-        'stockReceptions' => ProductPurchase::with(['supplier', 'warehouse', 'product'])->latest()->get(),
-    ]);
-}
+    public function openPriceInput($productId)
+    {
+        $this->currentProductId = $productId;
+        $this->productQuantity = $this->selectedProducts[$productId]['quantity'];
+        $this->productPrice = $this->selectedProducts[$productId]['price'];
+        $this->priceInputModal = true;
+    }
 
+    public function savePriceInput()
+    {
+        $this->validate([
+            'productQuantity' => 'required|integer|min:1',
+            'productPrice' => 'required|numeric|min:0',
+        ]);
+
+        $this->selectedProducts[$this->currentProductId]['quantity'] = $this->productQuantity;
+        $this->selectedProducts[$this->currentProductId]['price'] = $this->productPrice;
+
+        $this->priceInputModal = false;
+        $this->currentProductId = null;
+    }
+
+    public function saveReception()
+    {
+        $this->validate([
+            'supplierId' => 'required|exists:clients,id',
+            'warehouseId' => 'required|exists:warehouses,id',
+            'invoiceNumber' => 'nullable|string|max:255',
+            'selectedProducts' => 'required|array|min:1',
+        ]);
+
+        foreach ($this->selectedProducts as $productId => $details) {
+            ProductPurchase::create([
+                'invoice' => $this->invoiceNumber,
+                'supplier_id' => $this->supplierId,
+                'warehouse_id' => $this->warehouseId,
+                'product_id' => $productId,
+                'note' => $this->comments,
+                'purchase_price' => $details['price'],
+                'quantity' => $details['quantity'],
+            ]);
+
+            WarehouseStock::updateOrCreate(
+                [
+                    'warehouse_id' => $this->warehouseId,
+                    'product_id' => $productId,
+                ],
+                [
+                    'quantity' => \DB::raw('quantity + ' . $details['quantity']),
+                ]
+            );
+        }
+
+        session()->flash('success', 'Оприходование успешно сохранено.');
+        $this->reset(['supplierId', 'warehouseId', 'selectedProducts', 'invoiceNumber', 'comments']);
+    }
+
+    public function render()
+    {
+        return view('livewire.admin.stock-reception', [
+            'suppliers' => Client::where('is_supplier', true)->get(),
+            'warehouses' => Warehouse::all(),
+            'products' => $this->products,
+            'stockReceptions' => ProductPurchase::with(['supplier', 'warehouse', 'product'])->latest()->get(),
+        ]);
+    }
 }

@@ -50,8 +50,8 @@ class Product extends Model
     }
 
 
-    // public function warehouseStocks()
-    // {
-    //     return $this->hasMany(WarehouseStock::class);
-    // }
+    public function warehouseStocks()
+    {
+        return $this->hasMany(WarehouseStock::class);
+    }
 }

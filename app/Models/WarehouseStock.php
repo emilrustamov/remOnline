@@ -9,7 +9,7 @@ class WarehouseStock extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['warehouse_id', 'product_id', 'quantity', ];
+    protected $fillable = ['warehouse_id', 'product_id', 'quantity'];
 
     public function warehouse()
     {
@@ -19,5 +19,11 @@ class WarehouseStock extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function writeOffs()
+    {
+        return $this->hasMany(StockWriteOff::class, 'warehouse_id', 'warehouse_id')
+            ->whereColumn('product_id', 'product_id');
     }
 }

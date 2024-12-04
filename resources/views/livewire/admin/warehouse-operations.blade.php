@@ -5,7 +5,7 @@
         <!-- Фильтр по складу -->
         <div>
             <label class="block text-sm font-medium">Склад</label>
-            <select wire:model="selectedWarehouse" class="w-64 p-2 border rounded">
+            <select wire:model.live="selectedWarehouse" class="w-64 p-2 border rounded">
                 <option value="">Выберите склад</option>
                 @foreach ($warehouses as $warehouse)
                     <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
@@ -16,7 +16,7 @@
         <!-- Фильтр по категории -->
         <div>
             <label class="block text-sm font-medium">Категория</label>
-            <select wire:model="categoryFilter" class="w-64 p-2 border rounded">
+            <select wire:model.live="categoryFilter" class="w-64 p-2 border rounded">
                 <option value="">Все категории</option>
                 @foreach ($categories as $category)
                     <option value="{{ $category->id }}">{{ $category->name }}</option>
