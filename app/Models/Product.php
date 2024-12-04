@@ -44,6 +44,11 @@ class Product extends Model
         return $this->hasMany(ProductSerialNumber::class);
     }
 
+    public function prices()
+    {
+        return $this->morphMany(Price::class, 'item');
+    }
+
 
     // public function warehouseStocks()
     // {

@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Models\Category;
+use App\Models\Product;
 
 class Categories extends Component
 {
@@ -62,7 +63,7 @@ class Categories extends Component
     }
     public function hasProducts($categoryId)
     {
-        return \App\Models\Product::where('category_id', $categoryId)->exists();
+        return Product::where('category_id', $categoryId)->exists();
     }
 
 

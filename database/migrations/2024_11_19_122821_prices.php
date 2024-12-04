@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('item_type', ['product', 'service']);
             $table->decimal('price', 15, 2);
             $table->foreignId('currency_id')->constrained('currencies')->onDelete('cascade');
-            $table->string('price_type')->nullable();
+            $table->enum('price_type', ['Розничная', 'Оптовая'])->nullable();
             $table->decimal('exchange_rate', 15, 6)->nullable();
             $table->timestamps();
         });

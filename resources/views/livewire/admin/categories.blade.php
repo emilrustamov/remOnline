@@ -7,34 +7,7 @@
     </button>
     {{-- @endif --}}
 
-    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4" id="table">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Название</th>
-                <th class="py-2 px-4 border-b">Родительская категория</th>
-
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($categories as $category)
-                <tr>
-                    <td class="py-2 px-4 border-b">
-                        @if (auth()->user()->hasPermission('view_clients'))
-                            <a href="#" wire:click.prevent="editCategory({{ $category->id }})"
-                                class="text-blue-500">
-                                {{ $category->name }}
-                            </a>
-                        @else
-                            {{ $category->name }}
-                        @endif
-                    </td>
-                    <td class="py-2 px-4 border-b">
-                        {{ $category->parent ? $category->parent->name : 'Нет' }}
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table> --}}
+  
     <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
         Настроить колонки
     </button>

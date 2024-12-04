@@ -7,33 +7,11 @@
     @endif
 
 
-    {{-- <table class="min-w-full bg-white shadow-md rounded mt-4" id="table">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Название</th>
-                <th class="py-2 px-4 border-b">Артикул</th>
-                <th class="py-2 px-4 border-b">Количество</th>
-
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($products as $product)
-                <tr>
-                    <td class="py-2 px-4 border-b">{{ $product->name }}</td>
-                    <td class="py-2 px-4 border-b">{{ $product->sku }}</td>
-                    <td class="py-2 px-4 border-b space-x-2">
-                        <button wire:click="editProduct({{ $product->id }})" class="text-yellow-500">
-                            <i class="fas fa-edit"></i>
-                        </button>
-
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table> --}}
     <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
         Настроить колонки
     </button>
+
+
 
     <!-- Меню фильтров -->
     <div id="columnsMenu" class="hidden absolute bg-white shadow-md rounded p-4 z-10 mt-2">
@@ -66,7 +44,7 @@
                 </div>
             @endfor
         </div>
-        <div id="table" class="fade-in shadow w-full rounded-md overflow-hidden" >
+        <div id="table" class="fade-in shadow w-full rounded-md overflow-hidden">
             <div id="header-row" class="grid grid-flow-col auto-cols-auto">
                 @foreach ($columns as $column)
                     <div class="p-2 cursor-move whitespace-nowrap" data-key="{{ $column }}">
@@ -80,7 +58,7 @@
                     <div class="grid grid-flow-col auto-cols-auto" wire:click="editProduct({{ $product->id }})">
                         @foreach ($columns as $column)
                             <div class="p-2 whitespace-nowrap" data-key="{{ $column }}">
-                                    {{ $product->$column }}
+                                {{ $product->$column }}
                             </div>
                         @endforeach
                     </div>
@@ -88,7 +66,38 @@
             </div>
         </div>
     </div>
-
+    <div id="categoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+        style="display: {{ $showCategoryForm ? 'flex' : 'none' }};">
+        <div class="bg-white w-1/3 p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-bold mb-4">Создать категорию</h2>
+            <div>
+                <label class="block mb-1">Название категории</label>
+                <input type="text" wire:model="categoryName" placeholder="Название категории"
+                    class="w-full p-2 border rounded">
+                @error('categoryName')
+                    <span class="text-red-500">{{ $message }}</span>
+                @enderror
+            </div>
+            <div>
+                <label class="block mb-1">Родительская категория</label>
+                <select wire:model="parentCategoryId" class="w-full p-2 border rounded">
+                    <option value="">Выберите родительскую категорию</option>
+                    @foreach ($categories as $category)
+                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    @endforeach
+                </select>
+                @error('parentCategoryId')
+                    <span class="text-red-500">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="mt-4 flex justify-end space-x-2">
+                <button wire:click="saveCategory" class="bg-green-500 text-white px-4 py-2 rounded">Сохранить</button>
+                <button wire:click="$set('showCategoryForm', false)" class="bg-gray-500 text-white px-4 py-2 rounded">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
         style="display: {{ $showForm ? 'block' : 'none' }};">
@@ -104,6 +113,11 @@
                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                         @endforeach
                     </select>
+                    <button wire:click="$set('showCategoryForm', true)"
+                        class="bg-blue-500 text-white px-4 py-2 rounded">
+                        <i class="fas fa-plus"></i> Добавить категорию
+                    </button>
+
                 </div>
 
                 <div>
@@ -129,14 +143,26 @@
                     @enderror
                 </div>
 
-                {{-- <div>
-                    <label class="block mb-1">Количество</label>
-                    <input type="number" wire:model="stock_quantity" placeholder="Количество"
+                <div>
+                    <label class="block mb-1">Розничная цена</label>
+                    <input type="number" wire:model="prices.Розничная" step="0.01" placeholder="Розничная цена"
                         class="w-full p-2 border rounded">
-                    @error('stock_quantity')
+                    @error('prices.Розничная')
                         <span class="text-red-500">{{ $message }}</span>
                     @enderror
-                </div> --}}
+                </div>
+
+                <div>
+                    <label class="block mb-1">Оптовая цена</label>
+                    <input type="number" wire:model="prices.Оптовая" step="0.01" placeholder="Оптовая цена"
+                        class="w-full p-2 border rounded">
+                    @error('prices.Оптовая')
+                        <span class="text-red-500">{{ $message }}</span>
+                    @enderror
+                </div>
+
+
+
                 <div>
                     <label>Текущие изображения:</label>
                     <div class="flex flex-wrap gap-2">

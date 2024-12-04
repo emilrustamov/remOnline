@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             CurrencySeeder::class,
             CashRegisterSeeder::class,
             SettingSeeder::class,
-            PriceTypeSeeder::class,
+
         ]);
         // \App\Models\User::factory(10)->create();
 

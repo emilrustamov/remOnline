@@ -63,8 +63,8 @@ class Users extends Component
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $this->userId,
             'password' => 'nullable|min:8',
-            'hire_date' => 'required|date',
-            'position' => 'required|string',
+            'hire_date' => 'nullable|date',
+            'position' => 'nullable|string',
             'roleId' => 'required|exists:roles,id',
         ]);
 

@@ -5,21 +5,67 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Product;
+use App\Models\Price;
+use App\Models\Currency;
+use App\Models\Category;
 use Livewire\WithFileUploads;
+use Illuminate\Http\UploadedFile;
 
 class Products extends Component
 {
     use WithPagination;
     use WithFileUploads;
 
-    public $name, $description, $sku, $articul, $stock_quantity, $status = true, $productId, $images = [], $newImages = [], $barcode, $showForm = false, $category_id;
-
-
+    public $name, $description, $sku, $articul, $stock_quantity, $status = true, $productId, $images = [], $newImages = [], $prices = [], $barcode, $showForm = false, $category_id;
+    public $defaultCurrencyId;
+    public $showCategoryForm = false;
+    public $categoryName; // Для названия категории
+    public $parentCategoryId; // Для родительской категории
     public $columns = [
         'name',          // Название
         'sku',           // Артикул
         'stock_quantity' // Количество
     ];
+
+    public function mount()
+    {
+        // Устанавливаем дефолтную валюту при загрузке компонента
+        $defaultCurrency = Currency::where('is_default', true)->first();
+        $this->defaultCurrencyId = $defaultCurrency ? $defaultCurrency->id : null;
+    }
+    public function createCategory()
+    {
+        $this->resetCategoryForm();
+        $this->showCategoryForm = true;
+    }
+
+    // Метод для сброса формы категории
+    public function resetCategoryForm()
+    {
+        $this->categoryName = '';
+        $this->parentCategoryId = null;
+        $this->showCategoryForm = false;
+    }
+
+    // Метод для сохранения категории
+    public function saveCategory()
+    {
+        $this->validate([
+            'categoryName' => 'required|string|max:255',
+            'parentCategoryId' => 'nullable|exists:categories,id',
+        ]);
+
+        Category::create([
+            'name' => $this->categoryName,
+            'parent_id' => $this->parentCategoryId,
+        ]);
+
+        session()->flash('success', 'Категория успешно добавлена.');
+        $this->resetCategoryForm();
+
+        // Обновляем список категорий
+        $this->dispatch('updated');
+    }
 
     public function resetForm()
     {
@@ -38,9 +84,10 @@ class Products extends Component
         $this->showForm = false; // Закрываем форму при сбросе
     }
 
+
     public function createProduct()
     {
-        $this->resetForm();
+        $this->reset();
         $this->showForm = true; // Открываем форму для создания
     }
 
@@ -54,19 +101,21 @@ class Products extends Component
             'articul' => 'nullable|string|max:255',
             'status' => 'boolean',
             'newImages.*' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+            'prices.Розничная' => 'nullable|numeric|min:0',
+            'prices.Оптовая' => 'nullable|numeric|min:0',
         ]);
 
         $photoPaths = $this->images; // Сохраняем уже существующие пути
 
         foreach ($this->newImages as $image) {
-            if ($image instanceof \Illuminate\Http\UploadedFile) {
+            if ($image instanceof UploadedFile) {
                 $photoPaths[] = $image->store('products', 'public'); // Сохраняем новые изображения
             }
         }
 
 
         // Сохранение продукта
-        Product::updateOrCreate(
+        $product = Product::updateOrCreate(
             ['id' => $this->productId],
             [
                 'name' => $this->name,
@@ -74,16 +123,24 @@ class Products extends Component
                 'description' => $this->description,
                 'sku' => $this->sku,
                 'articul' => $this->articul,
-                'stock_quantity' => $this->stock_quantity,
+                'stock_quantity' => 0, // Устанавливаем 0 по умолчанию
                 'status' => $this->status,
-                'images' => json_encode($photoPaths), // Преобразуем массив в JSON
+                'images' => json_encode($photoPaths),
                 'barcode' => $this->barcode,
             ]
         );
+        dd($this->prices);
+
+        foreach ($this->prices as $type => $price) {
+            Price::updateOrCreate(
+                ['item_id' => $product->id, 'item_type' => 'product', 'price_type' => $type],
+                ['price' => $price, 'currency_id' => $this->defaultCurrencyId]
+            );
+        }
 
         session()->flash('success', $this->productId ? 'Товар успешно обновлен.' : 'Товар успешно добавлен.');
         $this->dispatch('updated');
-        $this->resetForm();
+        $this->reset();
     }
 
     public function editProduct($id)
@@ -100,6 +157,13 @@ class Products extends Component
         $this->images = $product->images ? json_decode($product->images, true) : [];
         $this->barcode = $product->barcode;
         $this->category_id = $product->category_id;
+        $prices = Price::where('item_id', $product->id)
+            ->where('item_type', 'product')
+            ->get();
+
+        foreach ($prices as $price) {
+            $this->prices[$price->price_type] = $price->price;
+        }
     }
 
     public function update()
@@ -119,7 +183,7 @@ class Products extends Component
 
         session()->flash('success', 'Товар успешно обновлен.');
 
-        $this->resetForm();
+        $this->reset();
     }
 
     public function deleteProduct($id)
@@ -163,7 +227,7 @@ class Products extends Component
     {
         return view('livewire.admin.products', [
             'products' => Product::paginate(10),
-            'categories' => \App\Models\Category::all(),
+            'categories' => Category::all(),
         ]);
     }
 }
