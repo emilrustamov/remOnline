@@ -33,8 +33,15 @@
                 <a href="{{ route('admin.products.index') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
                     <i class="fa-solid fa-gifts mr-2"></i> Товары
                 </a>
+            </li>
+            <li class="mb-2">
                 <a href="{{ route('admin.categories.index') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
                     <i class="fa fa-list-alt mr-2"></i> Категории
+                </a>
+            </li>
+            <li class="mb-2">
+                <a href="{{ route('admin.warehouse.operations') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                    <i class="fa-solid fa-warehouse mr-2"></i> Склады
                 </a>
             </li>
             @if (auth()->user()->hasPermission('view_clients'))
