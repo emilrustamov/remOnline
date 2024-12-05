@@ -129,7 +129,7 @@ class Products extends Component
                 'barcode' => $this->barcode,
             ]
         );
-        dd($this->prices);
+        // dd($this->prices);
 
         foreach ($this->prices as $type => $price) {
             Price::updateOrCreate(
