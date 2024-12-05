@@ -9,19 +9,24 @@ class StockMovement extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'warehouse_from', 'warehouse_to', 'note'];
+    protected $fillable = [
+        'product_id',
+        'warehouse_from',
+        'warehouse_to',
+        'note',
+    ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function fromWarehouse()
+    public function warehouseFrom()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_from');
     }
 
-    public function toWarehouse()
+    public function warehouseTo()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_to');
     }

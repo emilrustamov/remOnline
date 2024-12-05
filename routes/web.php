@@ -16,6 +16,7 @@ use App\Livewire\Admin\Warehouses;
 use App\Livewire\Admin\WarehouseOperations;
 use App\Livewire\Admin\StockReception;
 use App\Livewire\Admin\StockWriteOffs;
+use App\Livewire\Admin\StockTransfer;
 
 
 
@@ -43,6 +44,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/warehouse-operations', WarehouseOperations::class)->name('warehouse.operations');
     Route::get('/warehouse-reception', StockReception::class)->name('warehouse.reception');
     Route::get('/stock-write-offs', StockWriteOffs::class)->name('stock-write-offs');
+    Route::get('/warehouse-transfers', StockTransfer::class)->name('warehouse.transfers');
 
 });
 
