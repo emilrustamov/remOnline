@@ -6,8 +6,8 @@ use Livewire\Component;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
-use App\Models\StockMovement;
-use App\Models\StockWriteOff;
+use App\Models\WarehouseStockMovement;
+use App\Models\WarehouseStockWriteOff;
 use App\Models\Category;
 
 class WarehouseOperations extends Component

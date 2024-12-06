@@ -6,9 +6,9 @@ use Livewire\Component;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
-use App\Models\StockMovement;
+use App\Models\WarehouseStockMovement;
 
-class StockTransfer extends Component
+class WarehouseStockTransfer extends Component
 {
     public $products = [];
     public $selectedWarehouseFrom;
@@ -117,7 +117,7 @@ class StockTransfer extends Component
             }
 
             // Создаем запись о перемещении
-            StockMovement::create([
+            WarehouseStockMovement::create([
                 'product_id' => $productId,
                 'warehouse_from' => $this->selectedWarehouseFrom,
                 'warehouse_to' => $this->selectedWarehouseTo,
@@ -132,7 +132,7 @@ class StockTransfer extends Component
 
     public function render()
     {
-        $this->stockMovements = StockMovement::with(['product', 'warehouseFrom', 'warehouseTo'])->latest()->get();
+        $this->stockMovements = WarehouseStockMovement::with(['product', 'warehouseFrom', 'warehouseTo'])->latest()->get();
 
         return view('livewire.admin.stock-transfer', [
             'warehouses' => Warehouse::all(),

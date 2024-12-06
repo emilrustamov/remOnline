@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductPurchase extends Model
+class WarehouseProductReceipt extends Model
 {
     use HasFactory;
 
@@ -17,6 +17,7 @@ class ProductPurchase extends Model
         'note',
         'purchase_price',
         'quantity',
+        'invoice',
     ];
 
     public function supplier()

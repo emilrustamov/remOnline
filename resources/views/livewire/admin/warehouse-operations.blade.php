@@ -1,9 +1,9 @@
 <div class="container mx-auto p-4">
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold mb-4">Управление стоком</h1>
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold ">Управление стоком</h1>
         <div class="flex">
-            <a class="text-green-500 mr-6" href="{{ route('admin.warehouse.reception') }}">Оприходования</a>
-            <a class="text-red-500" href="{{ route('admin.warehouse.write-offs') }}">Списания</a>
+            <a class="text-green-500 text-lg mr-6" href="{{ route('admin.warehouse.reception') }}">Оприходования</a>
+            <a class="text-red-500 text-lg" href="{{ route('admin.warehouse.write-offs') }}">Списания</a>
         </div>
     </div>
 

@@ -7,9 +7,9 @@ use App\Models\Product;
 use App\Models\Client;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
-use App\Models\StockWriteOff;
+use App\Models\WarehouseStockWriteOff;
 
-class StockWriteOffs extends Component
+class WarehouseStockWriteOffs extends Component
 {
     public $selectedWarehouse; // Выбранный склад
     public $selectedProducts = []; // Товары для списания
@@ -20,6 +20,23 @@ class StockWriteOffs extends Component
     public $productQuantity = 1; // Количество товара
     public $currentProductId; // Текущий выбранный товар
     public $warehouseProducts = []; // Доступные товары со склада
+    public $productSearch = '';
+    // В Livewire компоненте
+
+    public $showWriteOffModal = false;  // Флаг для показа модального окна
+
+    // Функция для открытия модального окна
+    public function openWriteOffModal()
+    {
+        $this->showWriteOffModal = true;
+    }
+
+    // Функция для закрытия модального окна
+    public function closeWriteOffModal()
+    {
+        $this->showWriteOffModal = false;
+    }
+
 
     public function mount()
     {
@@ -34,44 +51,53 @@ class StockWriteOffs extends Component
 
     public function loadWriteOffs()
     {
-        $this->stockWriteOffs = StockWriteOff::with(['product', 'warehouse'])
+        $this->stockWriteOffs = WarehouseStockWriteOff::with(['product', 'warehouse'])
             ->orderBy('created_at', 'desc')
             ->get();
     }
-    
+
 
     public function loadWarehouseProducts()
     {
         if ($this->selectedWarehouse) {
-            $this->warehouseProducts = WarehouseStock::where('warehouse_id', $this->selectedWarehouse)
-                ->with('product') // Загружаем связанные товары
-                ->get();
+            $query = WarehouseStock::where('warehouse_id', $this->selectedWarehouse)
+                ->with('product');
+
+            // Фильтрация по имени или артикулу товара
+            if ($this->productSearch != "") {
+                $query->whereHas('product', function ($q) {
+                    $q->where('name', 'like', '%' . $this->productSearch . '%')
+                        ->orWhere('sku', 'like', '%' . $this->productSearch . '%');
+                });
+            }
+
+            $this->warehouseProducts = $query->get();
         } else {
             $this->warehouseProducts = [];
         }
     }
-    
+
 
 
     public function addProduct($productId)
-{
-    $stock = WarehouseStock::where('warehouse_id', $this->selectedWarehouse)
-        ->where('product_id', $productId)
-        ->with('product') // Подгружаем товар
-        ->first();
+    {
+        $stock = WarehouseStock::where('warehouse_id', $this->selectedWarehouse)
+            ->where('product_id', $productId)
+            ->with('product') // Подгружаем товар
+            ->first();
 
-    if (!$stock) {
-        session()->flash('error', 'Товар не найден на складе.');
-        return;
+        if (!$stock) {
+            session()->flash('error', 'Товар не найден на складе.');
+            return;
+        }
+
+        $this->selectedProducts[$productId] = [
+            'name' => $stock->product->name ?? 'Название недоступно',
+            'quantity' => 1,
+        ];
+
+        $this->openProductModal($productId);
     }
-
-    $this->selectedProducts[$productId] = [
-        'name' => $stock->product->name ?? 'Название недоступно',
-        'quantity' => 1,
-    ];
-
-    $this->openProductModal($productId);
-}
 
 
     public function openProductModal($productId)
@@ -79,6 +105,12 @@ class StockWriteOffs extends Component
         $this->currentProductId = $productId;
         $this->productQuantity = $this->selectedProducts[$productId]['quantity'];
         $this->productModal = true;
+    }
+
+    // Функция для закрытия модального окна для товара
+    public function closeProductModal()
+    {
+        $this->productModal = false;
     }
 
     public function saveProductModal()
@@ -116,7 +148,7 @@ class StockWriteOffs extends Component
             }
 
             // Создание записи списания
-            StockWriteOff::create([
+            WarehouseStockWriteOff::create([
                 'warehouse_id' => $this->selectedWarehouse,
                 'product_id' => $productId,
                 'reason' => $this->reason,
@@ -131,10 +163,15 @@ class StockWriteOffs extends Component
 
         $this->reset(['selectedWarehouse', 'selectedProducts', 'reason']);
         $this->loadWriteOffs();
+        $this->showWriteOffModal = false;
     }
 
     public function render()
     {
+        if ($this->selectedWarehouse != null && $this->selectedWarehouse != '') {
+            $this->updatedSelectedWarehouse();
+
+        }
         return view('livewire.admin.stock-write-offs', [
             'warehouses' => Warehouse::all(),
             'products' => $this->warehouseProducts,
