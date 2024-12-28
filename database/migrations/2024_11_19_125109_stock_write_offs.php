@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_write_offs', function (Blueprint $table) {
+        Schema::create('warehouse_stock_write_offs', function (Blueprint $table) {
             $table->id(); // Уникальный идентификатор списания
-            $table->foreignId('supplier_id')->constrained('clients')->onDelete('cascade'); // Внешний ключ на клиентов (поставщиков)
             $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade'); // Внешний ключ на склады
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade'); // Внешний ключ на товары
             $table->text('reason'); // Причина списания
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stock_write_offs');
+        Schema::dropIfExists('warehouse_stock_write_offs');
     }
 };

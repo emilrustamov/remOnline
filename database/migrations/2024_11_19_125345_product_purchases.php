@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_purchases', function (Blueprint $table) {
+        Schema::create('warehouse_product_receipts', function (Blueprint $table) {
             $table->id(); // Уникальный идентификатор закупки
             $table->string('invoice')->nullable(); // Номер счета/накладной
             $table->foreignId('supplier_id')->constrained('clients')->onDelete('cascade'); // Внешний ключ на клиентов (поставщиков)
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_purchases');
+        Schema::dropIfExists('warehouse_product_receipts');
     }
 };

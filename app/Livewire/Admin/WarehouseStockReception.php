@@ -27,10 +27,10 @@ class WarehouseStockReception extends Component
     public $editingProductId = null;
     public $invoiceString = ''; // Поле для строки
     public $invoiceDate;
-
+    public $showConfirmationModal = false;
     public $products = []; // Доступные товары для выбранного склада
-
-    public $showReceptionModal = false; // Управление отображением модального окна
+    public $showForm = false; 
+    public $receptionId = null;
 
     public function mount()
     {
@@ -38,15 +38,38 @@ class WarehouseStockReception extends Component
         // $this->loadWriteOffs();
     }
 
-    public function openReceptionModal()
+    public function openForm()
     {
-        $this->resetForm(); // Сбрасываем данные формы перед открытием
-        $this->showReceptionModal = true;
+        $this->resetForm(); 
+        $this->showForm = true;
     }
 
-    public function closeReceptionModal()
+    public function closeForm()
     {
-        $this->showReceptionModal = false;
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        $warehouse = Warehouse::find($this->warehouseId);
+        $supplier = Client::find($this->supplierId);
+
+        return $this->invoiceNumber || $this->comments || $this->selectedProducts || 
+               $this->invoiceString || $this->invoiceDate || 
+               $this->warehouseId !== ($warehouse->id ?? null) || 
+               $this->supplierId !== ($supplier->id ?? null);
     }
 
     public function updatedWarehouseId()
@@ -54,27 +77,22 @@ class WarehouseStockReception extends Component
         $this->loadWarehouseProducts();
     }
 
-    // public function loadWarehouseProducts()
-    // {
-    //     $this->products = $this->warehouseId
-    //         ? WarehouseStock::where('warehouse_id', $this->warehouseId)->with('product')->get()->pluck('product')
-    //         : [];
-    // }
+
     public function loadWarehouseProducts()
     {
-        $query = WarehouseStock::where('warehouse_id', $this->warehouseId)
-            ->with('product');
+        // Начинаем с запроса всех товаров
+        $query = Product::query();
 
-        // Фильтрация по имени или артикулу товара
-        if ($this->productSearch != "") {
-            $query->whereHas('product', function ($q) {
-                $q->where('name', 'like', '%' . $this->productSearch . '%')
-                    ->orWhere('sku', 'like', '%' . $this->productSearch . '%');
-            });
+        // Фильтрация по имени или артикулу
+        if (!empty($this->productSearch)) {
+            $query->where('name', 'like', '%' . $this->productSearch . '%')
+                ->orWhere('sku', 'like', '%' . $this->productSearch . '%');
         }
 
-        $this->products = $query->get()->pluck('product');
+        // Загружаем список товаров
+        $this->products = $query->get();
     }
+
 
     public function addProduct($productId)
     {
@@ -135,23 +153,42 @@ class WarehouseStockReception extends Component
     {
         $this->validate([
             'supplierId' => 'required|exists:clients,id',
-            'warehouseId' =>
-                'exists:warehouses,id',
+            'warehouseId' => 'required|exists:warehouses,id',
             'invoiceNumber' => 'nullable|string|max:255',
             'selectedProducts' => 'required|array|min:1',
+            'comments' => 'nullable|string|max:255',
         ]);
 
         foreach ($this->selectedProducts as $productId => $details) {
-            WarehouseProductReceipt::create([
-                'invoice' => $this->invoiceNumber,
-                'supplier_id' => $this->supplierId,
-                'warehouse_id' => $this->warehouseId,
-                'product_id' => $productId,
-                'note' => $this->comments,
-                'purchase_price' => $details['price'],
-                'quantity' => $details['quantity'],
-            ]);
+            $invoice = $this->invoiceDate ?? now()->toDateString();
+            if (!empty($this->invoiceString)) {
+                $invoice = $this->invoiceString . ' ' . $invoice;
+            }
 
+            if ($this->receptionId) {
+                $reception = WarehouseProductReceipt::findOrFail($this->receptionId);
+                $reception->update([
+                    'invoice' => $invoice,
+                    'supplier_id' => $this->supplierId,
+                    'warehouse_id' => $this->warehouseId,
+                    'product_id' => $productId,
+                    'note' => $this->comments,
+                    'purchase_price' => $details['price'],
+                    'quantity' => $details['quantity'],
+                ]);
+            } else {
+                WarehouseProductReceipt::create([
+                    'invoice' => $invoice,
+                    'supplier_id' => $this->supplierId,
+                    'warehouse_id' => $this->warehouseId,
+                    'product_id' => $productId,
+                    'note' => $this->comments,
+                    'purchase_price' => $details['price'],
+                    'quantity' => $details['quantity'],
+                ]);
+            }
+
+            // Update or create the stock record
             WarehouseStock::updateOrCreate(
                 [
                     'warehouse_id' => $this->warehouseId,
@@ -166,13 +203,13 @@ class WarehouseStockReception extends Component
         session()->flash('success', 'Оприходование успешно сохранено.');
         $this->saveInvoice();
         $this->resetForm();
-        $this->closeReceptionModal(); // Закрываем модальное окно после сохранения
+        $this->closeForm(); // Закрываем модальное окно после сохранения
     }
 
     public function saveInvoice()
     {
         $this->validate([
-            'invoiceDate' => 'required|date',
+            'invoiceDate' => 'nullable|date',
             'invoiceString' => 'nullable|string',
         ]);
 
@@ -181,23 +218,43 @@ class WarehouseStockReception extends Component
             $invoice = $this->invoiceString . ' ' . $invoice;
         }
 
-        // Для отладки
-        \Log::info('Сохраняем накладную:', [
-            'warehouse_id' => $this->warehouseId,
-            'invoice' => $invoice,
-        ]);
 
-        // WarehouseProductReceipt::create([
-        //     'warehouse_id' => $this->warehouseId,
-        //     'invoice' => $invoice,
-        // ]);
-
-        $this->reset(['invoiceString', 'invoiceDate']);
+        $this->reset(['invoiceString', 'invoiceDate', 'comments']);
 
         session()->flash('message', 'Накладная успешно сохранена!');
     }
 
+    public function editReception($receptionId)
+    {
+        $reception = WarehouseProductReceipt::findOrFail($receptionId);
 
+        $this->receptionId = $receptionId;
+        $this->supplierId = $reception->supplier_id;
+        $this->warehouseId = $reception->warehouse_id;
+        $this->invoiceString = $reception->invoice;
+        $this->comments = $reception->note;
+        $this->selectedProducts = [
+            $reception->product_id => [
+                'name' => $reception->product->name,
+                'quantity' => $reception->quantity,
+                'price' => $reception->purchase_price,
+            ]
+        ];
+
+        $this->showForm = true;
+    }
+
+    public function deleteReception()
+    {
+        if ($this->receptionId) {
+            $reception = WarehouseProductReceipt::findOrFail($this->receptionId);
+            $reception->delete();
+
+            session()->flash('success', 'Оприходование успешно удалено.');
+            $this->resetForm();
+            $this->closeForm();
+        }
+    }
 
     public function resetForm()
     {
@@ -206,13 +263,16 @@ class WarehouseStockReception extends Component
         $this->invoiceNumber = null;
         $this->selectedProducts = [];
         $this->comments = null;
+        $this->productSearch = null;
+        $this->products = [];
+        $this->showForm = false;
     }
 
     public function render()
     {
+        $this->loadWarehouseProducts();
         if ($this->supplierId != null && $this->supplierId != '' && $this->warehouseId != null && $this->warehouseId != '') {
             $this->updatedWarehouseId();
-
         }
         return view('livewire.admin.stock-reception', [
             'suppliers' => Client::where('is_supplier', true)->get(),

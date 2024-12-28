@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_movements', function (Blueprint $table) {
+        Schema::create('warehouse_stock_movements', function (Blueprint $table) {
             $table->id(); // Уникальный идентификатор перемещения
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade'); // Внешний ключ на товары
             $table->foreignId('warehouse_from')->nullable()->constrained('warehouses')->onDelete('set null'); // Склад-отправитель

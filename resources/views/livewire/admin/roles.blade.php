@@ -1,10 +1,10 @@
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Управление ролями</h1>
-    <button wire:click="createRole" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
-        <i class="fas fa-plus"></i> Добавить роль
+    <button wire:click="openForm" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
+        <i class="fas fa-plus"></i>
     </button>
     <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
-        Настроить колонки
+        <i class="fas fa-cogs"></i>
     </button>
 
     <!-- Меню фильтров -->
@@ -70,68 +70,58 @@
         </div>
     </div>
 
-    <div id="modalBackground" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
-        style="display: {{ $showForm ? 'block' : 'none' }};">
+    <div id="modalBackground"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 transition-opacity duration-500 {{ $showForm ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none' }}"
+        wire:click="closeForm">
         <div id="form"
-            class="fixed top-0 right-0 w-1/3 h-full bg-white shadow-lg transform transition-transform duration-500 ease-in-out z-50 container mx-auto px-4"
-            style="transform: {{ $showForm ? 'translateX(0)' : 'translateX(100%)' }};">
+            class="fixed top-0 right-0 w-1/3 h-full bg-white shadow-lg transform transition-transform duration-500 ease-in-out z-50 container mx-auto p-4"
+            style="transform: {{ $showForm ? 'translateX(0)' : 'translateX(100%)' }};" wire:click.stop>
+            <button wire:click="closeForm" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+                style="right: 1rem;">
+                &times;
+            </button>
             <h2 class="text-xl font-bold mb-4">{{ $roleId ? 'Редактировать' : 'Создать' }} роль</h2>
-            @if ($showForm)
-                <!-- Поле ввода названия роли -->
-                <label class="block mb-1">Название роли</label>
-                <input type="text" wire:model="name" placeholder="Название роли"
-                    class="w-full p-2 mb-2 border rounded">
-                @error('name')
-                    <span class="text-red-500">{{ $message }}</span>
-                @enderror
 
-                <!-- Поле выбора пермишенов -->
-                <label class="block mb-1">Пермишены</label>
-                @foreach ($permissions as $permission)
-                    <label class="flex items-center mb-1">
-                        <input type="checkbox" wire:model="selectedPermissions" value="{{ $permission->id }}"
-                            class="form-checkbox mr-2">
-                        {{ $permission->name }}
-                    </label>
-                @endforeach
+            <!-- Поле ввода названия роли -->
+            <label class="block mb-1">Название роли</label>
+            <input type="text" wire:model="name" placeholder="Название роли" class="w-full p-2 mb-2 border rounded">
+            @error('name')
+                <span class="text-red-500">{{ $message }}</span>
+            @enderror
 
-                @if ($roleId)
-                    <span wire:click="deleteRole({{ $roleId }})" class="text-red-500 cursor-pointer">
-                        Удалить
-                    </span>
-                @endif
+            <!-- Поле выбора пермишенов -->
+            <label class="block mb-1">Пермишены</label>
+            @foreach ($permissions as $permission)
+                <label class="flex items-center mb-1">
+                    <input type="checkbox" wire:model="selectedPermissions" value="{{ $permission->id }}"
+                        class="form-checkbox mr-2">
+                    {{ $permission->name }}
+                </label>
+            @endforeach
 
-
-                <!-- Кнопки управления -->
-                <div class="mt-4 flex justify-start space-x-2">
-                    <button wire:click="saveRole" class="bg-green-500 text-white px-4 py-2 rounded">
-                        <i class="fas fa-save"></i> Сохранить
-                    </button>
-                    <button wire:click="resetForm" class="bg-red-500 text-white px-4 py-2 rounded">
-                        <i class="fas fa-times"></i> Отмена
-                    </button>
-                </div>
+            @if ($roleId)
+                <span wire:click="deleteRole({{ $roleId }})" class="text-red-500 cursor-pointer">
+                    Удалить
+                </span>
             @endif
-        </div>
-    </div>
 
 
-
-
-
-    <div id="confirmationModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
-        style="display: none;">
-        <div class="bg-white w-1/3 p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold mb-4">Вы уверены, что хотите закрыть?</h2>
-            <p>Все несохранённые данные будут потеряны.</p>
-            <div class="mt-4 flex justify-end space-x-2">
-                <button id="confirmClose" wire:click="resetForm"
-                    class="bg-red-500 text-white px-4 py-2 rounded">Да</button>
-                <button id="cancelClose" wire:click="resetForm"
-                    class="bg-gray-500 text-white px-4 py-2 rounded">Нет</button>
+            <!-- Кнопки управления -->
+            <div class="mt-4 flex justify-start space-x-2">
+                <button wire:click="saveRole" class="bg-green-500 text-white px-4 py-2 rounded">
+                    <i class="fas fa-save"></i>
+                </button>
+                <button wire:click="resetForm" class="bg-red-500 text-white px-4 py-2 rounded">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            @component('components.confirmation-modal', ['showConfirmationModal' => $showConfirmationModal])
+            @endcomponent
         </div>
     </div>
+
+
+
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", () => {

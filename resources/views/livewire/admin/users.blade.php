@@ -1,29 +1,27 @@
-{{-- resources/views/livewire/admin/users.blade.php --}}
-
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Список пользователей</h1>
 
     <div class="flex items-center mb-4">
-        <button wire:click="createUser" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-4">
+        <button wire:click="openForm" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-4">
             <i class="fas fa-plus"></i> <!-- Иконка добавления -->
         </button>
 
         <div class="flex space-x-4">
-            <a href="{{ route('admin.users.index') }}"
+            {{-- <a href="{{ route('admin.users.index') }}"
                 class="px-4 py-2 font-bold rounded
                       {{ request()->routeIs('admin.users.index') ? 'bg-gray-500 text-white cursor-default pointer-events-none' : 'bg-blue-500 hover:bg-blue-600 text-white' }}">
-                <i class="fas fa-users"></i> <!-- Иконка пользователей -->
+                <i class="fas fa-users"></i> <!-- Иконка пользователей --> --}}
             </a>
             <a href="{{ route('admin.roles.index') }}"
                 class="px-4 py-2 font-bold rounded
                       {{ request()->routeIs('admin.roles.index') ? 'bg-gray-500 text-white cursor-default pointer-events-none' : 'bg-green-500 hover:bg-green-600 text-white' }}">
                 <i class="fas fa-user-shield"></i> <!-- Иконка ролей -->
             </a>
+            <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
+                <i class="fas fa-cogs"></i> <!-- Иконка настроек -->
+            </button>
         </div>
     </div>
-    <button id="columnsMenuButton" class="bg-gray-500 text-white px-4 py-2 rounded">
-        Настроить колонки
-    </button>
 
     <!-- Меню фильтров -->
     <div id="columnsMenu" class="hidden absolute bg-white shadow-md rounded p-4 z-10 mt-2">
@@ -87,62 +85,59 @@
     </div>
 
 
-    @if ($showForm)
-        <div
-            class="fixed top-0 right-0 w-1/3 h-full bg-gray-100 shadow-lg p-6 transform transition-transform duration-500 ease-in-out {{ $showForm ? 'translate-x-0' : 'translate-x-full' }}">
+    <div id="modalBackground"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 transition-opacity duration-500 {{ $showForm ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none' }}"
+        wire:click="closeForm">
+        <div id="form"
+            class="fixed top-0 right-0 w-1/3 h-full bg-white shadow-lg transform transition-transform duration-500 ease-in-out z-50 container mx-auto p-4"
+            style="transform: {{ $showForm ? 'translateX(0)' : 'translateX(100%)' }};" wire:click.stop>
+            <button wire:click="closeForm" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+                style="right: 1rem;">
+                &times;
+            </button>
             <h2 class="text-xl font-bold mb-4">{{ $userId ? 'Редактировать' : 'Создать' }} пользователя</h2>
-            <input type="text" wire:model="name" placeholder="Имя" class="w-full p-2 mb-4 border rounded">
-            @error('name')
-                <span class="text-red-500">{{ $message }}</span>
-            @enderror
 
-            <input type="email" wire:model="email" placeholder="Email" class="w-full p-2 mb-4 border rounded">
-            @error('email')
-                <span class="text-red-500">{{ $message }}</span>
-            @enderror
+            @component('components.error-messages')
+            @endcomponent
 
-            <input type="password" wire:model="password" placeholder="Пароль" class="w-full p-2 mb-4 border rounded">
-            @error('password')
-                <span class="text-red-500">{{ $message }}</span>
-            @enderror
+            <input type="text" wire:model="name" placeholder="Имя" class="w-full p-2 mb-2 border rounded">
+
+            <input type="email" wire:model="email" placeholder="Email" class="w-full p-2 mb-2 border rounded">
+
+            <input type="password" wire:model="password" placeholder="Пароль" class="w-full p-2 mb-2 border rounded">
 
             <input type="date" wire:model="hire_date" placeholder="Дата приема на работу"
-                class="w-full p-2 mb-4 border rounded">
-            @error('hire_date')
-                <span class="text-red-500">{{ $message }}</span>
-            @enderror
+                class="w-full p-2 mb-2 border rounded">
 
-            <input type="text" wire:model="position" placeholder="Должность" class="w-full p-2 mb-4 border rounded">
-            @error('position')
-                <span class="text-red-500">{{ $message }}</span>
-            @enderror
+            <input type="text" wire:model="position" placeholder="Должность" class="w-full p-2 mb-2 border rounded">
 
             <label>Роли:</label>
             @foreach ($roles as $role)
-                <div>
+                <div class="mb-2">
                     <input type="radio" wire:model="roleId" value="{{ $role->id }}">
                     <label>{{ $role->name }}</label>
                 </div>
             @endforeach
-            @error('roleId')
-                <span class="text-red-500">{{ $message }}</span>
-            @enderror
+
             {{-- @if (auth()->user()->hasPermission('delete_users')) --}}
-            @if ($userId)
-                <p onclick="confirmDeletion({{ $userId }})" wire:click="deleteUser({{ $userId }})"
-                    class="text-red-500 py-1">
-                    Удалить
-                </p>
-            @endif
+
             {{-- @endif --}}
             <button wire:click="saveUser" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 mt-4 rounded">
                 <i class="fas fa-save"></i> <!-- Иконка сохранения -->
             </button>
-            <button wire:click="resetForm" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 mt-4 rounded">
-                <i class="fas fa-times"></i> <!-- Иконка отмены -->
-            </button>
+            @if ($userId)
+                <button onclick="confirmDeletion({{ $userId }})" wire:click="deleteUser({{ $userId }})"
+                    class="bg-red-500 text-white px-4 py-2 mt-4 rounded">
+                    <i class="fas fa-trash-alt"></i> <!-- Иконка удаления -->
+                </button>
+            @endif
+
+
+            @component('components.confirmation-modal', ['showConfirmationModal' => $showConfirmationModal])
+            @endcomponent
         </div>
-    @endif
+    </div>
+
     @push('scripts')
         @vite('resources/js/dragdroptable.js')
     @endpush
@@ -239,5 +234,3 @@
             restoreColumnVisibility();
         });
     </script>
-
-</div>

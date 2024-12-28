@@ -11,30 +11,59 @@ use App\Models\WarehouseStockWriteOff;
 
 class WarehouseStockWriteOffs extends Component
 {
-    public $selectedWarehouse; // Выбранный склад
-    public $selectedProducts = []; // Товары для списания
-    public $reason; // Причина списания
-    public $date; // Дата списания
-    public $stockWriteOffs; // Список всех списаний
-    public $productModal = false; // Модальное окно для добавления товаров
-    public $productQuantity = 1; // Количество товара
-    public $currentProductId; // Текущий выбранный товар
-    public $warehouseProducts = []; // Доступные товары со склада
+    public $selectedWarehouse;
+    public $selectedProducts = [];
+    public $reason;
+    public $date;
+    public $stockWriteOffs;
+    public $productModal = false;
+    public $productQuantity = 1;
+    public $currentProductId;
+    public $warehouseProducts = [];
     public $productSearch = '';
-    // В Livewire компоненте
-
-    public $showWriteOffModal = false;  // Флаг для показа модального окна
+    public $showForm = false;
+    public $showConfirmationModal = false;
+    public $writeOffId; // Declare as public property
 
     // Функция для открытия модального окна
-    public function openWriteOffModal()
+    public function openForm()
     {
-        $this->showWriteOffModal = true;
+        $this->resetForm();
+        $this->showForm = true;
     }
 
     // Функция для закрытия модального окна
-    public function closeWriteOffModal()
+    public function closeForm()
     {
-        $this->showWriteOffModal = false;
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        $originalWarehouse = Warehouse::find($this->selectedWarehouse);
+        $originalProducts = WarehouseStockWriteOff::where('warehouse_id', $this->selectedWarehouse)
+            ->pluck('product_id')
+            ->toArray();
+        $originalReason = WarehouseStockWriteOff::where('warehouse_id', $this->selectedWarehouse)
+            ->pluck('reason')
+            ->first();
+
+        return $this->selectedWarehouse !== ($originalWarehouse->id ?? null) ||
+            $this->selectedProducts !== $originalProducts ||
+            $this->reason !== ($originalReason ?? '');
     }
 
 
@@ -147,34 +176,85 @@ class WarehouseStockWriteOffs extends Component
                 return;
             }
 
-            // Создание записи списания
-            WarehouseStockWriteOff::create([
+            $writeOffData = [
                 'warehouse_id' => $this->selectedWarehouse,
                 'product_id' => $productId,
                 'reason' => $this->reason,
                 'quantity' => $details['quantity'],
-            ]);
+            ];
 
-            // Обновление количества в стоке
-            $stock->update(['quantity' => $stock->quantity - $details['quantity']]);
+            if ($this->writeOffId) {
+                $writeOff = WarehouseStockWriteOff::findOrFail($this->writeOffId);
+                // Revert the stock changes made by the original write-off
+                $stock->update(['quantity' => $stock->quantity + $writeOff->quantity]);
+
+                $writeOff->update($writeOffData);
+                $stock->update(['quantity' => $stock->quantity - $details['quantity']]);
+            } else {
+                WarehouseStockWriteOff::create($writeOffData);
+                $stock->update(['quantity' => $stock->quantity - $details['quantity']]);
+            }
         }
 
         session()->flash('success', 'Списание успешно выполнено.');
-
-        $this->reset(['selectedWarehouse', 'selectedProducts', 'reason']);
+        $this->resetForm();
         $this->loadWriteOffs();
-        $this->showWriteOffModal = false;
+        $this->showForm = false;
+    }
+
+    public function editWriteOff($writeOffId)
+    {
+        $writeOff = WarehouseStockWriteOff::findOrFail($writeOffId);
+        $this->selectedWarehouse = $writeOff->warehouse_id;
+        $this->reason = $writeOff->reason;
+        $this->selectedProducts = [
+            $writeOff->product_id => [
+                'name' => $writeOff->product->name,
+                'quantity' => $writeOff->quantity,
+            ],
+        ];
+        $this->writeOffId = $writeOffId; // Ensure writeOffId is set correctly
+        $this->showForm = true;
+    }
+
+    public function deleteWriteOff()
+    {
+        if ($this->writeOffId) {
+            $writeOff = WarehouseStockWriteOff::findOrFail($this->writeOffId);
+            $stock = WarehouseStock::where('warehouse_id', $writeOff->warehouse_id)
+                ->where('product_id', $writeOff->product_id)
+                ->first();
+
+            if ($stock) {
+                // Revert the stock changes made by the deleted write-off
+                $stock->update(['quantity' => $stock->quantity + $writeOff->quantity]);
+            }
+
+            $writeOff->delete();
+            session()->flash('success', 'Списание успешно удалено.');
+            $this->resetForm();
+            $this->loadWriteOffs();
+        } else {
+            session()->flash('error', 'Не удалось найти списание для удаления.');
+        }
     }
 
     public function render()
     {
         if ($this->selectedWarehouse != null && $this->selectedWarehouse != '') {
             $this->updatedSelectedWarehouse();
-
         }
         return view('livewire.admin.stock-write-offs', [
             'warehouses' => Warehouse::all(),
             'products' => $this->warehouseProducts,
         ]);
+    }
+
+
+    public function resetForm()
+    {
+        $this->reset(['selectedWarehouse', 'selectedProducts', 'reason', 'productSearch', 'warehouseProducts']);
+        $this->writeOffId = null;
+        $this->showForm = false;
     }
 }

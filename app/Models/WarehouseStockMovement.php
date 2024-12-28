@@ -14,6 +14,7 @@ class WarehouseStockMovement extends Model
         'warehouse_from',
         'warehouse_to',
         'note',
+        'quantity',
     ];
 
     public function product()

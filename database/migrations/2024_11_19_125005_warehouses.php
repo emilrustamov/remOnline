@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id(); // Уникальный идентификатор склада
             $table->string('name'); // Название склада
             $table->timestamps(); // created_at и updated_at
+            $table->json('access_users')->nullable();
         });
     }
 

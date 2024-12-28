@@ -40,7 +40,7 @@ class WarehouseOperations extends Component
     public function loadStockData()
     {
         $query = WarehouseStock::query()
-            ->with(['product', 'warehouse'])
+            ->with(['product.category', 'warehouse'])
             ->when($this->selectedWarehouse, function ($q) {
                 $q->where('warehouse_id', $this->selectedWarehouse);
             });
@@ -51,17 +51,23 @@ class WarehouseOperations extends Component
             });
         }
 
-        $this->stockData = $query->get();
+        $this->stockData = $query->get()->map(function ($stock) {
+            return [
+                'sku' => $stock->product->sku,
+                'name' => $stock->product->name,
+                'stock' => $stock->stock,
+                'category' => $stock->product->category->name ?? 'Без категории',
+            ];
+        });
     }
-
-    
 
     public function render()
     {
+        $this->loadStockData();
+
         return view('livewire.admin.warehouse-operations', [
             'warehouses' => Warehouse::all(),
-            'categories' => Category::all(),
-            'stockData' => $this->stockData,
+            'categories' => Category::all(), // Ensure this returns an array of category objects
         ]);
     }
 }

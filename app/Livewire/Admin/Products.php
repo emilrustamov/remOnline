@@ -10,21 +10,24 @@ use App\Models\Currency;
 use App\Models\Category;
 use Livewire\WithFileUploads;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Database\QueryException;
 
 class Products extends Component
 {
     use WithPagination;
     use WithFileUploads;
 
-    public $name, $description, $sku, $articul, $stock_quantity, $status = true, $productId, $images = [], $newImages = [], $prices = [], $barcode, $showForm = false, $category_id;
+    public $name, $description, $sku, $articul, $stock_quantity, $status = true, $productId, $images = [], $newImages = [], $prices = [], $barcode,  $category_id;
     public $defaultCurrencyId;
+    public $showForm = false;
     public $showCategoryForm = false;
-    public $categoryName; // Для названия категории
-    public $parentCategoryId; // Для родительской категории
+    public $showConfirmationModal = false;
+    public $categoryName;
+    public $parentCategoryId;
     public $columns = [
-        'name',          // Название
-        'sku',           // Артикул
-        'stock_quantity' // Количество
+        'name',
+        'sku',
+        'stock_quantity'
     ];
 
     public function mount()
@@ -33,19 +36,7 @@ class Products extends Component
         $defaultCurrency = Currency::where('is_default', true)->first();
         $this->defaultCurrencyId = $defaultCurrency ? $defaultCurrency->id : null;
     }
-    public function createCategory()
-    {
-        $this->resetCategoryForm();
-        $this->showCategoryForm = true;
-    }
 
-    // Метод для сброса формы категории
-    public function resetCategoryForm()
-    {
-        $this->categoryName = '';
-        $this->parentCategoryId = null;
-        $this->showCategoryForm = false;
-    }
 
     // Метод для сохранения категории
     public function saveCategory()
@@ -74,22 +65,54 @@ class Products extends Component
         $this->description = '';
         $this->sku = '';
         $this->articul = '';
-        $this->stock_quantity = '';
-        $this->status = true;
+        // $this->stock_quantity = '';
+        // $this->status = true;
         $this->images = [];
         $this->barcode = null;
         $this->category_id = null;
 
-
-        $this->showForm = false; // Закрываем форму при сбросе
+        $this->showForm = false; 
     }
 
 
-    public function createProduct()
+    public function openForm()
     {
         $this->reset();
         $this->showForm = true; // Открываем форму для создания
     }
+
+
+    public function closeForm()
+    {
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        $product = Product::find($this->productId);
+        return
+            $this->name !== ($product->name ?? null) ||
+            $this->description !== ($product->description ?? null) ||
+            $this->sku !== ($product->sku ?? null) ||
+            $this->articul !== ($product->articul ?? null) ||
+            // $this->status !== ($product->status ?? null) ||
+            $this->barcode !== ($product->barcode ?? null)  ||
+            $this->category_id !== ($product->category_id ?? null);
+            
+    }
+
 
     public function saveProduct()
     {
@@ -113,34 +136,43 @@ class Products extends Component
             }
         }
 
-
-        // Сохранение продукта
-        $product = Product::updateOrCreate(
-            ['id' => $this->productId],
-            [
-                'name' => $this->name,
-                'category_id' => $this->category_id,
-                'description' => $this->description,
-                'sku' => $this->sku,
-                'articul' => $this->articul,
-                'stock_quantity' => 0, // Устанавливаем 0 по умолчанию
-                'status' => $this->status,
-                'images' => json_encode($photoPaths),
-                'barcode' => $this->barcode,
-            ]
-        );
-        // dd($this->prices);
-
-        foreach ($this->prices as $type => $price) {
-            Price::updateOrCreate(
-                ['item_id' => $product->id, 'item_type' => 'product', 'price_type' => $type],
-                ['price' => $price, 'currency_id' => $this->defaultCurrencyId]
+        try {
+            // Сохранение продукта
+            $product = Product::updateOrCreate(
+                ['id' => $this->productId],
+                [
+                    'name' => $this->name,
+                    'category_id' => $this->category_id,
+                    'description' => $this->description,
+                    'sku' => $this->sku,
+                    'articul' => $this->articul,
+                    'stock_quantity' => 0, // Устанавливаем 0 по умолчанию
+                    'status' => $this->status,
+                    'images' => json_encode($photoPaths),
+                    'barcode' => $this->barcode,
+                ]
             );
-        }
+            // dd($this->prices);
 
-        session()->flash('success', $this->productId ? 'Товар успешно обновлен.' : 'Товар успешно добавлен.');
-        $this->dispatch('updated');
-        $this->reset();
+            foreach ($this->prices as $type => $price) {
+                Price::updateOrCreate(
+                    ['item_id' => $product->id, 'item_type' => 'product', 'price_type' => $type],
+                    ['price' => $price, 'currency_id' => $this->defaultCurrencyId]
+                );
+            }
+
+            session()->flash('success', $this->productId ? 'Товар успешно обновлен.' : 'Товар успешно добавлен.');
+            $this->dispatch('updated');
+            $this->resetForm();
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                session()->flash('error', 'Штрих-код уже существует. Пожалуйста, используйте другой.');
+            } else {
+                session()->flash('error', 'Произошла ошибка при сохранении товара: ' . $e->getMessage());
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Произошла ошибка при сохранении товара: ' . $e->getMessage());
+        }
     }
 
     public function editProduct($id)
@@ -200,12 +232,14 @@ class Products extends Component
         $this->images = array_values($this->images); // Переиндексация массива
     }
 
+
     public function generateBarcode()
     {
         $ean = substr(str_pad(rand(1, 999999999999), 12, '0', STR_PAD_LEFT), 0, 12);
         $checksum = $this->calculateEAN13Checksum($ean);
         return $ean . $checksum;
     }
+
     public function generateBarcodeManually()
     {
         $this->barcode = $this->generateBarcode();
@@ -220,6 +254,21 @@ class Products extends Component
             $sum += ($i % 2 === 0 ? 1 : 3) * $ean[$i];
         }
         return (10 - ($sum % 10)) % 10;
+    }
+
+
+    public function createCategory()
+    {
+        $this->resetCategoryForm();
+        $this->showCategoryForm = true;
+    }
+
+    // Метод для сброса формы категории
+    public function resetCategoryForm()
+    {
+        $this->categoryName = '';
+        $this->parentCategoryId = null;
+        $this->showCategoryForm = false;
     }
 
 

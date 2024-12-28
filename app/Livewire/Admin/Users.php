@@ -12,12 +12,13 @@ class Users extends Component
     public $roles;
     public $userId;
     public $showForm = false;
+    public $showConfirmationModal = false;
     public $name;
     public $email;
     public $password;
     public $roleId;
-    public $hire_date; // Новое поле для даты приёма
-    public $position;  // Новое поле для должности
+    public $hire_date;
+    public $position;
 
     protected $listeners = ['editUser'];
     public $columns = [
@@ -39,10 +40,33 @@ class Users extends Component
         $this->roles = Role::all();
     }
 
-    public function createUser()
+    public function openForm()
     {
         $this->resetForm();
         $this->showForm = true;
+    }
+
+    public function closeForm()
+    {
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        return $this->name ;
+          
     }
 
     public function editUser($userId)
@@ -102,13 +126,13 @@ class Users extends Component
         $this->dispatch('refreshPage');
     }
 
-    public function toggleUserStatus($userId)
-    {
-        $user = User::findOrFail($userId);
-        $user->is_active = !$user->is_active;
-        $user->save();
-        $this->users = User::with('roles')->get(); // Обновляем список пользователей
-    }
+    // public function toggleUserStatus($userId)
+    // {
+    //     $user = User::findOrFail($userId);
+    //     $user->is_active = !$user->is_active;
+    //     $user->save();
+    //     $this->users = User::with('roles')->get(); 
+    // }
 
     public function resetForm()
     {
@@ -116,7 +140,7 @@ class Users extends Component
         $this->name = '';
         $this->email = '';
         $this->password = '';
-        $this->roleId = null; // Обнуляем роль
+        $this->roleId = null; 
         $this->hire_date = null;
         $this->position = null;
         $this->showForm = false;

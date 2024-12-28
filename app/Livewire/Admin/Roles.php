@@ -14,7 +14,7 @@ class Roles extends Component
     public $name;
     public $selectedPermissions = [];
     public $showForm = false;
-
+    public $showConfirmationModal = false;
     protected $listeners = ['editRole'];
 
     public $columns = [
@@ -28,10 +28,34 @@ class Roles extends Component
         $this->permissions = Permission::all();
     }
 
-    public function createRole()
+   
+    public function openForm()
     {
         $this->resetForm();
         $this->showForm = true;
+    }
+
+    public function closeForm()
+    {
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        return $this->name ;
+          
     }
 
     public function editRole($id)
@@ -91,8 +115,6 @@ class Roles extends Component
             $this->resetForm();
         }
 
-        session()->flash('message', 'Роль успешно удалена.');
-        session()->flash('type', 'success');
         $this->dispatch('deleted');
         $this->dispatch('refreshPage');
     }

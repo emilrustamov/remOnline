@@ -1,39 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let isFormChanged = false;
-
-    const clientForm = document.querySelector('#form');
+    const form = document.querySelector('#form');
     const modalBackground = document.querySelector('#modalBackground');
     const confirmationModal = document.querySelector('#confirmationModal');
     const confirmButton = document.querySelector('#confirmClose');
     const cancelButton = document.querySelector('#cancelClose');
 
-    // Делегирование события изменения для отслеживания изменений в полях формы
-    clientForm.addEventListener('change', (event) => {
-        if (event.target.matches('input, textarea')) {
-            isFormChanged = true; // Отмечаем, что форма была изменена
-        }
-    });
-
-    function showModal() {
-        clientForm.style.transform = 'translateX(0)'; // Показываем модальное окно
-        modalBackground.style.display = 'block'; // Показываем фон
-    }
-
-    function hideModal() {
-        if (isFormChanged) {
-            confirmationModal.style.display = 'flex'; // Показываем окно подтверждения
-        } else {
-            closeModal();
-        }
-    }
+    // Удаляем делегирование события изменения
+    // form.addEventListener('change', (event) => {
+    //     if (event.target.matches('input, textarea, select')) {
+    //         isFormChanged = true; // Отмечаем, что форма была изменена
+    //     }
+    // });
 
     function closeModal() {
-        clientForm.style.transform = 'translateX(100%)'; // Прячем модальное окно
+        form.style.transform = 'translateX(100%)'; // Прячем модальное окно
         setTimeout(() => {
             modalBackground.style.display = 'none'; // Скрываем фон после анимации
-        }, 500); // Длительность анимации (500ms)
-        isFormChanged = false;
-        resetForm(); // Сбрасываем флаг изменений
+        }, 500); 
+        // Удаляем переменную isFormChanged
+        // isFormChanged = false;
     }
 
     confirmButton.addEventListener('click', () => {
@@ -42,14 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cancelButton.addEventListener('click', () => {
-        isFormChanged = false; // Сбрасываем флаг изменений при отмене закрытия
-        confirmationModal.style.display = 'none';
+        confirmationModal.style.display = 'none !important';
     });
 
-    modalBackground.addEventListener('click', (event) => {
-        if (event.target === modalBackground) {
-            hideModal();
-        }
-    });
+    // modalBackground.addEventListener('click', (event) => {
+    //     if (event.target === modalBackground) {
+    //         hideModal();
+    //     }
+    // });
 
+    // form.addEventListener('click', (event) => {
+    //     event.stopPropagation(); // Предотвращаем всплытие события клика
+    // });
 });

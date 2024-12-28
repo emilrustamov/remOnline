@@ -25,6 +25,7 @@ class Clients extends Component
     public $phones = [['number' => '', 'sms' => false]];
     public $emails = [];
     public $showForm = false;
+    public $showConfirmationModal = false;
     protected $listeners = ['editClient'];
     public $columns = [
         'id',
@@ -45,10 +46,48 @@ class Clients extends Component
         $this->loadClients();
     }
 
-    public function createClient()
+    public function openForm()
     {
         $this->resetForm();
         $this->showForm = true;
+    }
+
+    public function closeForm()
+    {
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        $client = Client::find($this->clientId);
+
+        return $this->first_name !== ($client->first_name ?? '') ||
+            $this->last_name !== ($client->last_name ?? '') ||
+            $this->client_type !== ($client->client_type ?? '') ||
+            $this->address !== ($client->address ?? '') ||
+            $this->contact_person !== ($client->contact_person ?? '') ||
+            $this->note !== ($client->note ?? '') ||
+            $this->isSupplier !== ($client->is_supplier ?? false) ||
+            $this->isConflict !== ($client->is_conflict ?? false) ||
+            $this->phones !== ($client->phones->map(function ($phone) {
+                return [
+                    'number' => $phone->phone,
+                    'sms' => $phone->is_sms,
+                ];
+            })->toArray() ?? []) ||
+            $this->emails !== ($client->emails->pluck('email')->toArray() ?? []);
     }
 
 
@@ -69,6 +108,14 @@ class Clients extends Component
         if (!Auth::user()->hasPermission('create_clients')) {
             $this->dispatch('error');
             return;
+        }
+
+        // Check for duplicate phone numbers
+        foreach ($this->phones as $phone) {
+            if (!empty($phone['number']) && ClientsPhones::where('phone', $phone['number'])->exists()) {
+                $this->addError('phones.' . array_search($phone, $this->phones) . '.number', 'Phone number already exists.');
+                return;
+            }
         }
 
         $client = Client::updateOrCreate(
@@ -199,6 +246,7 @@ class Clients extends Component
         $this->showForm = false;
         $this->contact_person = '';
         $this->note = '';
+        $this->showForm = false;
     }
 
 

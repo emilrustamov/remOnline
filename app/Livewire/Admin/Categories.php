@@ -10,6 +10,7 @@ class Categories extends Component
 {
     public $name, $parent_id, $categoryId;
     public $showForm = false;
+    public $showConfirmationModal = false;
     public $columns = [
         'name',             // Название
         'parent'   // Родительская категория
@@ -23,11 +24,36 @@ class Categories extends Component
         $this->showForm = false;
     }
 
-    public function createCategory()
+
+    public function openForm()
     {
         $this->resetForm();
-        $this->showForm = true; // Открываем форму для создания
+        $this->showForm = true;
     }
+
+    public function closeForm()
+    {
+        if ($this->isFormChanged()) {
+            $this->showConfirmationModal = true;
+        } else {
+            $this->resetForm();
+        }
+    }
+
+    public function closeModal($confirm = false)
+    {
+        if ($confirm) {
+            $this->resetForm();
+        }
+        $this->showConfirmationModal = false;
+    }
+
+    public function isFormChanged()
+    {
+        $category = Category::find($this->categoryId);
+        return $this->name !== ($category->name ?? '') || $this->parent_id !== ($category->parent_id ?? null);
+    }
+
 
     public function saveCategory()
     {
@@ -38,7 +64,7 @@ class Categories extends Component
 
         $this->validate($rules);
 
-        Category::updateOrCreate(
+        $category = Category::updateOrCreate(
             ['id' => $this->categoryId],
             [
                 'name' => $this->name,
@@ -48,7 +74,7 @@ class Categories extends Component
 
         session()->flash('success', $this->categoryId ? 'Категория обновлена.' : 'Категория добавлена.');
         $this->dispatch('updated');
-
+        $this->dispatch('categorySaved', id: $category->id);
         $this->resetForm();
     }
 

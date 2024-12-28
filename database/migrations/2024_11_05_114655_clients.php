@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('address')->nullable(); // Адрес клиента
             $table->text('note')->nullable(); // Примечание
             $table->string('status')->default('active'); // Статус клиента
+            $table->integer('order')->default(0);
             $table->timestamps(); // created_at и updated_at
         });
     }
